@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
@@ -9,6 +11,45 @@ export const metadata: Metadata = {
 const GITHUB_ISSUES = "https://github.com/lipov3cz3k/jasitadyjenom.cz/issues";
 
 const sections: { title: string; body: React.ReactNode }[] = [
+  {
+    title: "Fotky",
+    body: (
+      <>
+        Fotky zpracovává jen váš prohlížeč. Čas a polohu pořízení čte přímo z fotky ve vašem zařízení. Na náš server ani
+        nikam jinam se neodesílají. Úřadu je posíláte sami jako přílohu zprávy ze své datové schránky.
+      </>
+    ),
+  },
+  {
+    title: "Poloha",
+    body: (
+      <>
+        Abychom zjistili adresu místa, posíláme souřadnice zaokrouhlené na zhruba 1 metr službě Českého úřadu
+        zeměměřického a katastrálního (ags.cuzk.gov.cz). Pokud je místo blízko hranice dvou úřadů, ověřujeme u stejné
+        služby i příslušný úřad. Jinak úřad hledáme přímo v prohlížeči podle dat, která si stáhne z našeho webu. ČÚZK
+        při tom vidí souřadnice a vaši IP adresu. Polohu zařízení zjišťujeme jen po kliknutí na „Použít moji polohu“.
+      </>
+    ),
+  },
+  {
+    title: "Mapa",
+    body: (
+      <>
+        Mapové podklady načítáme ze služby OpenFreeMap (tiles.openfreemap.org), která je doručuje přes síť Cloudflare.
+        Ta při tom vidí vaši IP adresu a výřez mapy, který si prohlížíte.
+      </>
+    ),
+  },
+  {
+    title: "Vaše jméno a adresa",
+    body: (
+      <>
+        Údaje oznamovatele zůstávají v prohlížeči. Uložíme je (do úložiště prohlížeče, localStorage) jen tehdy, když
+        zaškrtnete „Zapamatovat v tomto prohlížeči“. Smažete je tlačítkem „Smazat uložené údaje“ nebo vymazáním dat
+        webu v prohlížeči. Text podnětu odesíláte sami a my ho nevidíme.
+      </>
+    ),
+  },
   {
     title: "Server",
     body: (
@@ -59,7 +100,13 @@ export default function PrivacyPage() {
             </section>
           ))}
         </div>
+        <p className="mt-12">
+          <Link href="/nahlasit" className="font-medium text-sign-blue underline">
+            Nahlásit auto →
+          </Link>
+        </p>
       </main>
+      <SiteFooter />
     </div>
   );
 }

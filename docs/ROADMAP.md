@@ -7,7 +7,7 @@
 - [x] GitHub Actions: CI a deploy
 - [x] [Ruční kroky](./SETUP.md)
 
-## Etapa 2 – nahlášení bez AI (`/nahlasit`)
+## Etapa 2 – nahlášení bez AI (`/nahlasit`) ✅
 
 Principy: vše běží v prohlížeči, fotky ani údaje oznamovatele neopustí zařízení.
 Poloha odchází jen do ČÚZK (adresa) a dlaždice mapy jdou přes OpenFreeMap.
@@ -41,10 +41,10 @@ správního obvodu. Městská policie řízení nevede.
 - [x] Kopírovací tlačítka a odkaz na portál datových schránek
 - [x] Hláška „auto ještě stojí? volejte 156“
 
-### PR 4 – zveřejnění
-- [ ] Odkaz z landing page
-- [ ] Stránka se zásadami soukromí
-- [ ] Uvedení zdrojů dat (ČÚZK CC BY 4.0, RPP, OSM/OpenFreeMap) a datum aktualizace
+### PR 4 – zveřejnění ✅
+- [x] Odkaz z landing page
+- [x] Stránka se zásadami soukromí
+- [x] Uvedení zdrojů dat (ČÚZK CC BY 4.0, RPP, OSM/OpenFreeMap) a datum aktualizace
 
 ## Později
 
