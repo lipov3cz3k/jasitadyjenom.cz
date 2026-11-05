@@ -1,0 +1,27 @@
+# Dependencies
+/node_modules
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Env
+.env
+.env*.local
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+backend.hcl
+!backend.hcl.example
+crash.log

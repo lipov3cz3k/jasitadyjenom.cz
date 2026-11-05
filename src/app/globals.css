@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Traffic sign colors */
+  --color-sign-blue: #0b4ea2;
+  --color-sign-red: #d7262e;
+  --color-line-yellow: #f6c700;
+}
+
+:root {
+  --background: #fafaf7;
+  --foreground: #16181d;
+  --muted: #5b616e;
+  --surface: #ffffff;
+  --border: #e3e3dd;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f1115;
+    --foreground: #eceef2;
+    --muted: #a1a7b3;
+    --surface: #171a20;
+    --border: #2a2e37;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
