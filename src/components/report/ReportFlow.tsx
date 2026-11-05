@@ -10,6 +10,10 @@ import { evaluatePhotoAge, OLD_AFTER_DAYS } from "@/lib/photos/rules";
 import { AuthorityCard } from "./AuthorityCard";
 import { Notice } from "./Notice";
 import { PhotoPicker, type PhotoItem } from "./PhotoPicker";
+import { Step } from "./Step";
+
+// Reads localStorage (saved reporter details), so browser only
+const NoticeSection = dynamic(() => import("./NoticeSection"), { ssr: false });
 
 const LocationMap = dynamic(() => import("./LocationMap").then((m) => m.LocationMap), {
   ssr: false,
@@ -79,6 +83,7 @@ export function ReportFlow() {
         setAddressState("missing");
       });
 
+    setAuthority(null);
     setAuthorityState("loading");
     loadAuthorityIndex()
       .then((index) => resolveAuthority(index, point, signal))
@@ -226,23 +231,17 @@ export function ReportFlow() {
         {location && authorityState === "idle" && authority && <AuthorityCard result={authority} />}
       </Step>
 
-      <p className="border-t border-border pt-8 text-sm text-muted">
-        Další krok – údaje o vozidle a hotový text podnětu – připravujeme.
-      </p>
+      <NoticeSection
+        step={4}
+        context={{
+          authority: authority?.match?.authority ?? null,
+          point: location?.point ?? null,
+          address,
+          takenAt,
+          timeInvalid: age === "expired" || age === "future",
+          attachments: photos.map((p) => p.file.name),
+        }}
+      />
     </div>
-  );
-}
-
-function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
-  return (
-    <section aria-labelledby={`krok-${number}`}>
-      <h2 id={`krok-${number}`} className="mb-5 flex items-center gap-3 text-xl font-semibold tracking-tight">
-        <span className="flex size-8 items-center justify-center rounded-full bg-line-yellow text-sm font-bold text-black">
-          {number}
-        </span>
-        {title}
-      </h2>
-      {children}
-    </section>
   );
 }

@@ -33,13 +33,13 @@ správního obvodu. Městská policie řízení nevede.
 - [x] U bodu blízko hranice ověřit úřad přes ČÚZK (identify)
 - [x] Návod, jaké fotky pořídit, a upozornění, když přílohy přesáhnou 20 MB
 
-### PR 3 – podnět
-- [ ] Formulář: SPZ, popis vozu, typ přestupku
-- [ ] Šablona podnětu: ochota svědčit, žádost o vyrozumění do 30 dnů, GPS, seznam příloh
-- [ ] Anonymní podnět s upozorněním
-- [ ] Údaje oznamovatele, volitelně zapamatované v localStorage
-- [ ] Kopírovací tlačítka a odkaz na portál datových schránek
-- [ ] Hláška „auto ještě stojí? volejte 156“
+### PR 3 – podnět ✅
+- [x] Formulář: SPZ, popis vozu, typ přestupku
+- [x] Šablona podnětu: ochota svědčit, žádost o vyrozumění do 30 dnů, GPS, seznam příloh
+- [x] Anonymní podnět s upozorněním
+- [x] Údaje oznamovatele, volitelně zapamatované v localStorage
+- [x] Kopírovací tlačítka a odkaz na portál datových schránek
+- [x] Hláška „auto ještě stojí? volejte 156“
 
 ### PR 4 – zveřejnění
 - [ ] Odkaz z landing page
