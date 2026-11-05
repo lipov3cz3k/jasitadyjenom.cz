@@ -1,0 +1,44 @@
+{
+  "_comment": "Manual authority adjustments applied after automatic matching. Key = area id (orp:<ORP code> | praha-so:<code>). Fields: name, dataBoxId, office, verification (standard|verified|unverified), note, source (for humans only, not written to the data).",
+
+  "_names": "Names that RPP lists in all caps:",
+  "orp:230": { "name": "Město Černošice" },
+  "orp:1031": { "name": "Město Broumov" },
+  "orp:1066": { "name": "Město Náchod" },
+  "orp:1155": { "name": "Město Turnov" },
+  "orp:1210": { "name": "Město Trutnov" },
+
+  "_special": "Cities that organise offence handling differently:",
+  "orp:1317": {
+    "office": "Odbor přestupků v dopravě",
+    "verification": "verified",
+    "source": "https://www.brno.cz/documents/20121/11957734/MMB-2025-0081.pdf"
+  },
+  "orp:582": {
+    "office": "Odbor správních činností, oddělení dopravních přestupků",
+    "verification": "verified",
+    "note": "Název odboru podle rozhodnutí z roku 2019, může být zastaralý.",
+    "source": "rozhodnutí NSS / krajských soudů v dopravních přestupcích (Plzeň)"
+  },
+  "orp:1961": {
+    "verification": "unverified",
+    "note": "Statutární město členěné na městské obvody – příslušnost magistrátu zatím neověřena."
+  },
+  "orp:922": {
+    "verification": "unverified",
+    "note": "Statutární město členěné na městské obvody – příslušnost magistrátu zatím neověřena."
+  },
+  "orp:1082": {
+    "verification": "unverified",
+    "note": "Statutární město členěné na městské obvody – příslušnost magistrátu zatím neověřena."
+  },
+  "orp:817": {
+    "name": "Statutární město Liberec",
+    "verification": "unverified",
+    "note": "Statutární město členěné na městské obvody – příslušnost magistrátu zatím neověřena."
+  },
+  "orp:1945": {
+    "verification": "unverified",
+    "note": "Statutární město členěné na městské části – příslušnost magistrátu zatím neověřena."
+  }
+}
