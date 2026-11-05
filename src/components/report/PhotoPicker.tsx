@@ -1,0 +1,101 @@
+"use client";
+
+import { useState } from "react";
+import { checkAttachments, formatBytes, MAX_ATTACHMENTS, MAX_MESSAGE_BYTES } from "@/lib/photos/rules";
+import { Notice } from "./Notice";
+
+export interface PhotoItem {
+  id: string;
+  file: File;
+  url: string;
+}
+
+interface Props {
+  photos: PhotoItem[];
+  onAdd: (files: File[]) => void;
+  onRemove: (id: string) => void;
+}
+
+const tips = [
+  "čitelnou registrační značku (SPZ)",
+  "celé auto i s okolím – aby bylo vidět chodník, přechod, vjezd nebo zeleň",
+  "dopravní značku, pokud jde o zákaz zastavení či stání",
+  "u místa pro invalidy i to, že za sklem chybí parkovací průkaz",
+];
+
+export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
+  const { totalBytes, tooLarge, tooMany } = checkAttachments(photos.map((p) => p.file.size));
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-surface p-5 text-sm">
+        <p className="font-medium">Co by mělo být na fotkách:</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
+          {tips.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      </div>
+
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-8 text-center transition hover:border-sign-blue">
+        <span className="font-medium text-sign-blue">{photos.length ? "Přidat další fotky" : "Vybrat fotky"}</span>
+        <span className="text-xs text-muted">Fotky zůstávají ve vašem zařízení, nikam je neodesíláme.</span>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="sr-only"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            e.target.value = "";
+            if (files.length) onAdd(files);
+          }}
+        />
+      </label>
+
+      {photos.length > 0 && (
+        <>
+          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            {photos.map((p) => (
+              <li key={p.id} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-surface">
+                <Thumbnail photo={p} />
+                <button
+                  type="button"
+                  onClick={() => onRemove(p.id)}
+                  className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white"
+                  aria-label={`Odebrat ${p.file.name}`}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted">
+            {photos.length} {photos.length === 1 ? "fotka" : photos.length < 5 ? "fotky" : "fotek"}, celkem{" "}
+            {formatBytes(totalBytes)}
+          </p>
+        </>
+      )}
+
+      {tooLarge && (
+        <Notice tone="warning">
+          Fotky mají dohromady víc než {formatBytes(MAX_MESSAGE_BYTES)}, což je limit jedné datové zprávy. Pošlete jen
+          ty nejdůležitější, nebo je před přiložením zmenšete.
+        </Notice>
+      )}
+      {tooMany && <Notice tone="warning">Datová zpráva unese nejvýš {MAX_ATTACHMENTS} příloh.</Notice>}
+    </div>
+  );
+}
+
+function Thumbnail({ photo }: { photo: PhotoItem }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    // e.g. HEIC, which the browser can't display – fine as an attachment
+    return <span className="flex h-full items-center justify-center p-2 text-center text-xs text-muted">{photo.file.name}</span>;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- local blob URL, next/image makes no sense here
+    <img src={photo.url} alt={photo.file.name} className="h-full w-full object-cover" onError={() => setFailed(true)} />
+  );
+}

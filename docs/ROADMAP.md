@@ -25,13 +25,13 @@ správního obvodu. Městská policie řízení nevede.
 - [x] Vitest v CI, testy na reálných bodech
 - [x] Měsíční GitHub Action, která založí PR s aktualizovanými daty
 
-### PR 2 – fotka a poloha
-- [ ] Nahrání fotek a EXIF (`exifreader`)
-- [ ] Poloha: EXIF → geolokace → ruční výběr na mapě (MapLibre + OpenFreeMap)
-- [ ] Čas: EXIF → čas změny souboru → ruční zadání. Upozornění u fotek starších 14 dní, fotky starší než rok odmítnout.
-- [ ] Adresa z reverse geocodingu ČÚZK (upravitelná)
-- [ ] U bodu blízko hranice ověřit úřad přes ČÚZK (identify)
-- [ ] Návod, jaké fotky pořídit, a upozornění, když přílohy přesáhnou 20 MB
+### PR 2 – fotka a poloha ✅
+- [x] Nahrání fotek a EXIF (`exifreader`)
+- [x] Poloha: EXIF → geolokace → ruční výběr na mapě (MapLibre + OpenFreeMap)
+- [x] Čas: EXIF → čas změny souboru → ruční zadání. Upozornění u fotek starších 14 dní, fotky starší než rok odmítnout.
+- [x] Adresa z reverse geocodingu ČÚZK (upravitelná)
+- [x] U bodu blízko hranice ověřit úřad přes ČÚZK (identify)
+- [x] Návod, jaké fotky pořídit, a upozornění, když přílohy přesáhnou 20 MB
 
 ### PR 3 – podnět
 - [ ] Formulář: SPZ, popis vozu, typ přestupku
