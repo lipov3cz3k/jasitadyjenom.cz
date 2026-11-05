@@ -22,6 +22,7 @@ npm ci
 npm run dev        # http://localhost:3000
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
@@ -39,6 +40,23 @@ Produkční kontejner:
 docker build -t jasitadyjenom .
 docker run --rm -p 8080:8080 jasitadyjenom   # http://localhost:8080
 ```
+
+## Data úřadů
+
+Aplikace hledá příslušný úřad (ORP, v Praze úřad MČ Praha 1–22) v prohlížeči
+podle polohy nad souborem [`public/data/authorities.json`](./public/data/authorities.json).
+Vyrábí ho pipeline v [`data-pipeline/`](./data-pipeline/) z otevřených dat ČÚZK
+(RÚIAN, CC BY 4.0) a Registru práv a povinností:
+
+```bash
+npm ci --prefix data-pipeline
+npm run data:update
+npm test
+```
+
+Ruční úpravy (města s městskými obvody, opravy názvů) jsou v
+[`data-pipeline/overrides.json`](./data-pipeline/overrides.json). Měsíční
+aktualizaci dělá workflow [Data update](./.github/workflows/data-update.yml).
 
 ## Infrastruktura a nasazení
 

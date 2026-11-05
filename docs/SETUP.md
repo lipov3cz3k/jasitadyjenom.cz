@@ -154,7 +154,17 @@ Totéž jde nastavit ručně v **Settings → Secrets and variables → Actions 
 
 Dokud `GCP_WORKLOAD_IDENTITY_PROVIDER` není nastavená, workflow Deploy se přeskakuje.
 
-## 9. První nasazení
+## 9. Automatická aktualizace dat
+
+Workflow [Data update](../.github/workflows/data-update.yml) jednou měsíčně stáhne
+hranice ORP a seznam úřadů s datovými schránkami a při změně založí PR. Aby to
+mohl udělat, zapni v **Settings → Actions → General → Workflow permissions**
+volbu **„Allow GitHub Actions to create and approve pull requests“**.
+
+PR založený z GitHub Actions nespouští CI (omezení `GITHUB_TOKEN`). Testy proto
+běží přímo ve workflow Data update. Pokud chceš CI i na PR, zavři ho a znovu otevři.
+
+## 10. První nasazení
 
 Push do `main` (mimo změny v `terraform/`, `docs/` a `*.md`), nebo ruční spuštění:
 
