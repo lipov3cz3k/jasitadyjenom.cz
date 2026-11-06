@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 8.8"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.28"
+    }
   }
 
   # State lives in HCP Terraform. The workspace uses Execution Mode: Local,
@@ -24,3 +28,6 @@ provider "google" {
   project = var.project_id
   region  = var.region
 }
+
+# Token from the CLOUDFLARE_API_TOKEN environment variable
+provider "cloudflare" {}

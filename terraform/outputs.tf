@@ -19,7 +19,7 @@ output "deployer_service_account" {
 }
 
 output "dns_records" {
-  description = "DNS records to create in Cloudflare (DNS only)."
+  description = "DNS records Google returns for the domain mapping (to check against dns.tf)."
   value = {
     for domain, m in google_cloud_run_domain_mapping.app : domain => [
       for r in try(m.status[0].resource_records, []) : {
@@ -28,5 +28,16 @@ output "dns_records" {
         value = r.rrdata
       }
     ]
+  }
+}
+
+output "dnssec" {
+  description = "KEYSET data for the registrar (.cz: DNSKEY = flags, protocol 3, algorithm, public key; elsewhere DS)."
+  value = length(cloudflare_zone_dnssec.this) == 0 ? null : {
+    flags      = cloudflare_zone_dnssec.this[0].flags
+    protocol   = 3
+    algorithm  = cloudflare_zone_dnssec.this[0].algorithm
+    public_key = cloudflare_zone_dnssec.this[0].public_key
+    ds         = cloudflare_zone_dnssec.this[0].ds
   }
 }

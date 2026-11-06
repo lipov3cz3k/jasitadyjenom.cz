@@ -26,3 +26,9 @@ variable "domains" {
   type        = list(string)
   default     = ["jasitadyjenom.cz", "www.jasitadyjenom.cz"]
 }
+
+variable "cloudflare_zone" {
+  description = "Cloudflare zone in which Terraform creates DNS records for var.domains."
+  type        = string
+  default     = "jasitadyjenom.cz"
+}

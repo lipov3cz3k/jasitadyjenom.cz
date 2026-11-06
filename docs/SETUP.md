@@ -25,7 +25,7 @@ export REGION=europe-west1
 | Rozpočet (budget alert) | Patří k billing účtu, ne k projektu. Navíc jen upozorňuje, útratu nezastaví. |
 | Organizace a workspace v HCP Terraform | Problém slepice a vejce: state nemůže spravovat místo, ve kterém sám leží. |
 | Ověření domény | Prokázání vlastnictví domény v Search Console je interaktivní. |
-| DNS v Cloudflare | Dohoda: pár záznamů, které se nemění. Bez dalšího API tokenu. |
+| Zóna v Cloudflare a NS servery u registrátora | Zóna se zakládá jednou a její smazání by shodilo celou doménu. NS (u `.cz` NSSET) se mění u registrátora, pro WEDOS Terraform provider není. DNS záznamy pro Cloud Run už Terraform spravuje. |
 | GitHub Actions variables | Terraform by potřeboval GitHub token s právy na repozitář. |
 | Hodnoty tajemství (budoucí `GEMINI_API_KEY`) | Hodnota by skončila v Terraform state. Až přijde na řadu, Terraform založí jen secret bez hodnoty a verzi přidáš přes `gcloud secrets versions add`. |
 
@@ -73,6 +73,18 @@ gcloud auth application-default login
 gcloud auth application-default set-quota-project "$PROJECT_ID"
 ```
 
+Pro DNS záznamy potřebuje Terraform API token do Cloudflare. V Cloudflare otevři
+**My Profile → API Tokens → Create Token → Custom token**:
+- oprávnění **Zone → Zone → Read** a **Zone → DNS → Edit**
+- Zone Resources: **Include → Specific zone → `jasitadyjenom.cz`**
+
+Token si ulož bezpečně (správce hesel apod.) a před spuštěním Terraformu ho dej
+do prostředí jako `CLOUDFLARE_API_TOKEN`.
+
+Token se do Terraform state neukládá, provider ho čte jen z prostředí.
+
+Bez vlastní domény (`domains = []`) Terraform do Cloudflare nesahá.
+
 ## 5. Ověření domény
 
 Cloud Run domain mapping vyžaduje, aby účet, pod kterým běží Terraform, byl
@@ -102,20 +114,25 @@ Cloud Run služba se vytvoří se zástupným image (`hello`). Skutečnou aplika
 nasadí až GitHub Actions. Služba má `deletion_protection`, takže ji
 `terraform destroy` nesmaže, dokud ochranu nevypneš.
 
-## 7. DNS v Cloudflare
+## 7. DNS a certifikát
 
-```bash
-terraform output dns_records
-```
+Zónu `jasitadyjenom.cz` založ v Cloudflare ručně (Add a domain, plán Free) a u registrátora
+nastav NS servery, které Cloudflare přidělí. Pokud má doména DNSSEC (u `.cz` KEYSET),
+před změnou NS ho odeber, jinak doména přestane resolvovat.
 
-Zobrazí se záznamy pro `jasitadyjenom.cz` (4× A a 4× AAAA) a pro `www`
-(CNAME na `ghs.googlehosted.com`). Pokud jsou výstupy prázdné, mapping se ještě
-zpracovává. Počkej pár minut a spusť `terraform apply -refresh-only && terraform output dns_records`.
+DNSSEC pak zapne Terraform (`cloudflare_zone_dnssec`). Po `terraform apply` vypiš klíč
+příkazem `terraform output dnssec` a u WEDOSu vytvoř nový KEYSET s DNSKEY: flags **KSK** (`257`),
+algoritmus `13` a veřejný klíč z `public_key` (protokol `3` doplní WEDOS sám). Jiní registrátoři chtějí
+místo toho DS záznam (`ds`). Než KEYSET doplníš, zóna je podepsaná, ale řetězec důvěry
+z `.cz` ještě nevede, což nevadí.
 
-V Cloudflare:
-- záznamy zadej přesně podle výstupu
-- **Proxy status: DNS only (šedý mráček)**, jinak Google nevydá certifikát
-- pokud máš v zóně CAA záznamy, musí povolovat `pki.goog` a `letsencrypt.org`
+DNS záznamy pro domény z `domains` vytváří Terraform v [`dns.tf`](../terraform/dns.tf):
+pro `jasitadyjenom.cz` 4× A a 4× AAAA, pro `www` CNAME na `ghs.googlehosted.com`,
+vše **bez proxy** (šedý mráček), jinak Google nevydá certifikát. Hodnoty jsou v kódu
+napevno. `terraform output dns_records` ukazuje, co vrací Google, a check
+`dns_records_match_google` při `plan` upozorní, kdyby se lišily.
+
+Pokud máš v zóně CAA záznamy, musí povolovat `pki.goog` a `letsencrypt.org`.
 
 Vydání certifikátu trvá obvykle 15 minut, výjimečně až 24 hodin. Stav zkontroluješ takto:
 
