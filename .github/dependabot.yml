@@ -5,6 +5,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Major version follows the Node runtime (.nvmrc, Dockerfile)
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7 # wait a week after a release (protects against compromised releases)
     groups:

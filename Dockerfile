@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Multi-stage Next.js (standalone) build for Google Cloud Run
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS deps
