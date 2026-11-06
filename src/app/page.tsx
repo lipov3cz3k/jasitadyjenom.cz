@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OffensesMarquee } from "./offenses-marquee";
 
 const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
 
@@ -82,6 +83,10 @@ export default function Home() {
             </a>
             <span className="text-sm text-muted">Aplikaci právě stavíme.</span>
           </div>
+        </section>
+
+        <section aria-label="Nejčastější prohřešky a co říká zákon" className="border-t border-border py-16">
+          <OffensesMarquee />
         </section>
 
         <section aria-labelledby="jak-to-funguje" className="border-t border-border py-16">
