@@ -15,7 +15,7 @@ přes datovou schránku. Zatím je tu úvodní stránka. Prototyp aplikace je ve
 
 ## Lokální vývoj
 
-Potřebuješ Node.js 24 (viz `.nvmrc`).
+Potřebuješ Node.js 26 (viz `.nvmrc`).
 
 ```bash
 npm ci

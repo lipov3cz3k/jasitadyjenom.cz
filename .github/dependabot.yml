@@ -5,12 +5,27 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Major version follows the Node runtime (.nvmrc, Dockerfile)
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     cooldown:
       default-days: 7 # wait a week after a release (protects against compromised releases)
     groups:
       npm:
         patterns: ["*"]
         update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      # Node major is upgraded deliberately together with .nvmrc and @types/node
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
