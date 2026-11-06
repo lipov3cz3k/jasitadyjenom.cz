@@ -25,6 +25,14 @@ npm run typecheck
 npm run build
 ```
 
+Git hooky (gitleaks, ESLint, `terraform fmt` a pár základních kontrol před commitem)
+spravuje [pre-commit](https://pre-commit.com):
+
+```bash
+brew install pre-commit
+pre-commit install
+```
+
 Produkční kontejner:
 
 ```bash
