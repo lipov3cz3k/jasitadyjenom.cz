@@ -1,5 +1,5 @@
 # Dependencies
-/node_modules
+node_modules/
 
 # Next.js
 /.next/
@@ -10,6 +10,9 @@ next-env.d.ts
 # Env
 .env
 .env*.local
+
+# Copied from node_modules during build
+/public/vendor/
 
 # Misc
 .DS_Store
