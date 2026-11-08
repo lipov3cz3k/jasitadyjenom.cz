@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
 
 const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
@@ -37,31 +37,10 @@ const principles = [
   },
 ];
 
-function NoStoppingSign({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-      <circle cx="50" cy="50" r="46" fill="var(--color-sign-red)" />
-      <circle cx="50" cy="50" r="34" fill="var(--color-sign-blue)" />
-      <g stroke="var(--color-sign-red)" strokeWidth="10">
-        <line x1="22" y1="22" x2="78" y2="78" />
-        <line x1="78" y1="22" x2="22" y2="78" />
-      </g>
-    </svg>
-  );
-}
-
 export default function Home() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 sm:px-8">
-      <header className="flex items-center justify-between gap-4 py-6">
-        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-          <NoStoppingSign className="size-7" />
-          jasitadyjenom.cz
-        </Link>
-        <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-          Připravujeme
-        </span>
-      </header>
+      <SiteHeader badge="Připravujeme" />
 
       <main className="flex-1">
         <section className="py-16 sm:py-24">
