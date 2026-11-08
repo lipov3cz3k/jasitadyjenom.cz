@@ -64,34 +64,11 @@ body {
 }
 
 /* Offenses marquee */
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
+.marquee {
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent, #000 4rem, #000 calc(100% - 4rem), transparent);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .marquee {
-    overflow-x: hidden;
-    mask-image: linear-gradient(to right, transparent, #000 4rem, #000 calc(100% - 4rem), transparent);
-  }
-
-  .marquee-track {
-    animation: marquee 90s linear infinite;
-  }
-
-  .marquee:hover .marquee-track,
-  .marquee:focus-within .marquee-track {
-    animation-play-state: paused;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .marquee {
-    padding-inline: 1.25rem;
-  }
-
-  .marquee-duplicate {
-    display: none;
-  }
+.marquee::-webkit-scrollbar {
+  display: none;
 }
