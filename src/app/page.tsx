@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
 
@@ -102,9 +103,14 @@ export default function Home() {
 
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border py-8 text-sm text-muted">
         <span>© {new Date().getFullYear()} jasitadyjenom.cz · open source (MIT)</span>
-        <a href={GITHUB_URL} className="underline-offset-4 hover:underline">
-          GitHub
-        </a>
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/soukromi" className="underline-offset-4 hover:underline">
+            Ochrana soukromí
+          </Link>
+          <a href={GITHUB_URL} className="underline-offset-4 hover:underline">
+            GitHub
+          </a>
+        </nav>
       </footer>
     </div>
   );
