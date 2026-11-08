@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* `dark:` follows the explicit data-theme choice, otherwise the system preference */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -19,7 +31,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0f1115;
     --foreground: #eceef2;
     --muted: #a1a7b3;
@@ -27,6 +39,15 @@
     --border: #2a2e37;
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0f1115;
+  --foreground: #eceef2;
+  --muted: #a1a7b3;
+  --surface: #171a20;
+  --border: #2a2e37;
+  color-scheme: dark;
 }
 
 @theme inline {

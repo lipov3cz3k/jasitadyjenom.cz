@@ -21,7 +21,12 @@ const sections: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: "Cookies a analytika",
-    body: <>Nepoužíváme žádné cookies, analytické nástroje ani reklamu.</>,
+    body: (
+      <>
+        Nepoužíváme žádné cookies, analytické nástroje ani reklamu. Pokud ručně zvolíte světlý nebo tmavý vzhled,
+        zapamatuje si ho jen váš prohlížeč (localStorage).
+      </>
+    ),
   },
   {
     title: "Provozovatel a kontakt",

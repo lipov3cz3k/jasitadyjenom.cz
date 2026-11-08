@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NoStoppingSign } from "./NoStoppingSign";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SiteHeader({ badge }: { badge?: string }) {
   return (
@@ -8,11 +9,14 @@ export function SiteHeader({ badge }: { badge?: string }) {
         <NoStoppingSign className="size-7" />
         jasitadyjenom.cz
       </Link>
-      {badge && (
-        <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-          {badge}
-        </span>
-      )}
+      <div className="flex items-center gap-2">
+        {badge && (
+          <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
+            {badge}
+          </span>
+        )}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
