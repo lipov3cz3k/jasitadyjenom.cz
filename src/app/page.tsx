@@ -44,9 +44,9 @@ export default function Home() {
       <SiteHeader badge="Připravujeme" />
 
       <main className="flex-1">
-        <section className="py-16 sm:py-24">
+        <section className="pt-6 pb-10 sm:pt-8 sm:pb-12">
           <p className="text-lg italic text-muted">„Já si tady jenom na minutku odskočím…“</p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-balance sm:text-6xl">
+          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-balance sm:text-5xl">
             Nahlaste špatně zaparkované auto za minutu.
           </h1>
           <div className="mt-6 h-1.5 w-24 rounded-full bg-line-yellow" />
@@ -54,7 +54,7 @@ export default function Home() {
             Auto na chodníku, na přechodu nebo před vjezdem? Vyfoťte ho a aplikace za vás připraví
             podnět pro příslušný úřad, který odešlete svou datovou schránkou.
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
               href={GITHUB_URL}
               className="inline-flex items-center rounded-lg bg-sign-blue px-5 py-3 font-medium text-white transition hover:opacity-90"
@@ -65,7 +65,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section aria-label="Nejčastější prohřešky a co říká zákon" className="border-t border-border py-16">
+        <section aria-label="Nejčastější prohřešky a co říká zákon" className="border-t border-border pt-8 pb-16">
           <OffensesMarquee />
         </section>
 
