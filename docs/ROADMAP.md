@@ -46,9 +46,22 @@ správního obvodu. Městská policie řízení nevede.
 - [x] Stránka se zásadami soukromí
 - [x] Uvedení zdrojů dat (ČÚZK CC BY 4.0, RPP, OSM/OpenFreeMap) a datum aktualizace
 
+## Etapa 3 – předvyplnění pomocí AI
+
+Volitelné a jen na kliknutí: fotky (zmenšené v prohlížeči, bez metadat) a popis
+situace jdou přes `/api/analyze` do Gemini na Vertex AI (EU endpoint, service account
+Cloud Runu, žádný API klíč). Výsledek je návrh, který uživatel zkontroluje.
+
+- [x] Endpoint `/api/analyze`: strukturovaný JSON výstup, validace odpovědi, limity na IP a na den
+- [x] Z fotek a popisu: SPZ, popis vozu, druh přestupku, věcný popis, čitelné místo, upozornění na chybějící důkazy
+- [x] Návrh nepřepíše, co uživatel vyplnil sám, a pole s návrhem jsou označená
+- [x] Terraform: Vertex AI API, role pro runtime service account, proměnné prostředí
+- [x] Zásady soukromí
+- [ ] Vyhodnocení přesnosti na sadě reálných fotek a ladění promptu
+- [ ] Zvážit vypnutí cache Vertex AI pro projekt
+
 ## Později
 
-- AI rozpoznání SPZ (Gemini + Secret Manager + rate limiting)
 - Mapy.com jako zdroj map a geokódování
 - Zmenšování fotek a převod HEIC na JPEG
 - E2E testy (Playwright)

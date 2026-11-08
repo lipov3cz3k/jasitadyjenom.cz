@@ -26,6 +26,18 @@ npm test
 npm run build
 ```
 
+### Předvyplnění pomocí AI lokálně
+
+Endpoint `/api/analyze` potřebuje přístup ke Gemini. Bez něj vrací 503 a zbytek
+aplikace funguje. Zkopíruj [`.env.example`](./.env.example) do `.env.local` a zvol
+jednu z možností:
+
+- **Vertex AI** (stejně jako v produkci): nastav `GOOGLE_CLOUD_PROJECT` a přihlas se
+  `gcloud auth application-default login`. Tvůj účet potřebuje roli `roles/aiplatform.user`.
+- **Gemini API klíč** z [Google AI Studio](https://aistudio.google.com/apikey): nastav
+  `GEMINI_API_KEY`. Pozor: v bezplatné úrovni může Google poslaná data použít ke zlepšování
+  svých produktů, testuj proto na fotkách, kterým to nevadí.
+
 Git hooky (gitleaks, ESLint, `terraform fmt` a pár základních kontrol před commitem)
 spravuje [pre-commit](https://pre-commit.com):
 

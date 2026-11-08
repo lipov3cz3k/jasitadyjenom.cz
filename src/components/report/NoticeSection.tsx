@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { VehicleField, VehicleForm } from "@/lib/analysis/apply";
 import type { Authority } from "@/lib/authority/types";
 import { OFFENSES, type OffenseId } from "@/lib/notice/offenses";
 import { clearReporter, loadReporter, saveReporter } from "@/lib/notice/reporter-storage";
@@ -25,11 +26,17 @@ export interface NoticeContext {
 
 const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", email: "" };
 
-export default function NoticeSection({ context, step }: { context: NoticeContext; step: number }) {
-  const [plate, setPlate] = useState("");
-  const [vehicle, setVehicle] = useState("");
-  const [offense, setOffense] = useState<OffenseId | "">("");
-  const [details, setDetails] = useState("");
+interface Props {
+  context: NoticeContext;
+  step: number;
+  form: VehicleForm;
+  /** Fields pre-filled by the AI that the user hasn't edited yet. */
+  suggested: ReadonlySet<VehicleField>;
+  onChange: <K extends VehicleField>(field: K, value: VehicleForm[K]) => void;
+}
+
+export default function NoticeSection({ context, step, form, suggested, onChange }: Props) {
+  const { plate, vehicle, offense, details } = form;
 
   // The component renders only in the browser (ssr: false), so localStorage is available
   const [stored] = useState(loadReporter);
@@ -105,11 +112,11 @@ export default function NoticeSection({ context, step }: { context: NoticeContex
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="font-medium">Registrační značka (SPZ)</span>
+              <FieldLabel suggested={suggested.has("plate")}>Registrační značka (SPZ)</FieldLabel>
               <input
                 className={`${input} font-mono uppercase tracking-wider`}
                 value={plate}
-                onChange={(e) => setPlate(e.target.value)}
+                onChange={(e) => onChange("plate", e.target.value)}
                 placeholder="1AB 2345"
                 autoCapitalize="characters"
                 autoComplete="off"
@@ -121,19 +128,19 @@ export default function NoticeSection({ context, step }: { context: NoticeContex
               )}
             </label>
             <label className="block text-sm">
-              <span className="font-medium">Popis vozidla (nepovinné)</span>
+              <FieldLabel suggested={suggested.has("vehicle")}>Popis vozidla (nepovinné)</FieldLabel>
               <input
                 className={input}
                 value={vehicle}
-                onChange={(e) => setVehicle(e.target.value)}
+                onChange={(e) => onChange("vehicle", e.target.value)}
                 placeholder="např. Škoda Octavia, stříbrná"
               />
             </label>
           </div>
 
           <label className="block text-sm">
-            <span className="font-medium">Co se stalo</span>
-            <select className={input} value={offense} onChange={(e) => setOffense(e.target.value as OffenseId)}>
+            <FieldLabel suggested={suggested.has("offense")}>Co se stalo</FieldLabel>
+            <select className={input} value={offense} onChange={(e) => onChange("offense", e.target.value as OffenseId)}>
               <option value="" disabled>
                 Vyberte…
               </option>
@@ -146,13 +153,13 @@ export default function NoticeSection({ context, step }: { context: NoticeContex
           </label>
 
           <label className="block text-sm">
-            <span className="font-medium">
+            <FieldLabel suggested={suggested.has("details")}>
               {offense === "jine" ? "Popis přestupku" : "Doplňující popis (nepovinné)"}
-            </span>
+            </FieldLabel>
             <textarea
               className={`${input} min-h-24`}
               value={details}
-              onChange={(e) => setDetails(e.target.value)}
+              onChange={(e) => onChange("details", e.target.value)}
               placeholder="např. Chodci museli obcházet auto po silnici."
             />
           </label>
@@ -271,6 +278,19 @@ export default function NoticeSection({ context, step }: { context: NoticeContex
         )}
       </Step>
     </div>
+  );
+}
+
+function FieldLabel({ suggested, children }: { suggested: boolean; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2 font-medium">
+      {children}
+      {suggested && (
+        <span className="rounded-full bg-sign-blue/10 px-2 py-0.5 text-xs font-medium text-sign-blue">
+          návrh AI – zkontrolujte
+        </span>
+      )}
+    </span>
   );
 }
 

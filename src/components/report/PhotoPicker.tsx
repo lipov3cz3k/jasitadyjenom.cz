@@ -39,7 +39,7 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
 
       <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-8 text-center transition hover:border-sign-blue">
         <span className="font-medium text-sign-blue">{photos.length ? "Přidat další fotky" : "Vybrat fotky"}</span>
-        <span className="text-xs text-muted">Fotky zůstávají ve vašem zařízení, nikam je neodesíláme.</span>
+        <span className="text-xs text-muted">Fotky zůstávají ve vašem zařízení. Odešleme je jen, když použijete předvyplnění pomocí AI.</span>
         <input
           type="file"
           accept="image/*"

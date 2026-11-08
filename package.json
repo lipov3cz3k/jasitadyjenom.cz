@@ -17,6 +17,7 @@
     "prebuild": "node scripts/copy-vendor.mjs"
   },
   "dependencies": {
+    "@google/genai": "3.0.0",
     "exifreader": "4.51.0",
     "maplibre-gl": "6.15.0",
     "next": "16.4.5",
@@ -39,6 +40,7 @@
     "vitest": "4.1.12"
   },
   "allowScripts": {
-    "exifreader": false
+    "exifreader": false,
+    "protobufjs": false
   }
 }

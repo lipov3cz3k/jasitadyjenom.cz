@@ -2,11 +2,20 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import {
+  applyAnalysis,
+  emptyVehicleForm,
+  vehicleFieldLabels,
+  type VehicleField,
+  type VehicleForm,
+} from "@/lib/analysis/apply";
+import type { Analysis } from "@/lib/analysis/schema";
 import { loadAuthorityIndex, resolveAuthority, type ResolvedAuthority } from "@/lib/authority/client";
 import { reverseGeocode } from "@/lib/cuzk";
 import { formatDateTime, fromDateTimeLocal, toDateTimeLocal } from "@/lib/datetime";
 import { combineMetadata, readPhotoMetadata, type LatLon, type PhotoMetadata } from "@/lib/photos/metadata";
 import { evaluatePhotoAge, OLD_AFTER_DAYS } from "@/lib/photos/rules";
+import { AiAssist } from "./AiAssist";
 import { AuthorityCard } from "./AuthorityCard";
 import { Notice } from "./Notice";
 import { PhotoPicker, type PhotoItem } from "./PhotoPicker";
@@ -50,6 +59,9 @@ export function ReportFlow() {
 
   const [authority, setAuthority] = useState<ResolvedAuthority | null>(null);
   const [authorityState, setAuthorityState] = useState<"idle" | "loading" | "error">("idle");
+
+  const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
+  const [suggested, setSuggested] = useState<ReadonlySet<VehicleField>>(new Set());
 
   const lookup = useRef<AbortController | null>(null);
   const photoUrls = useRef<string[]>([]);
@@ -122,6 +134,24 @@ export function ReportFlow() {
     setPhotos((prev) => prev.filter((p) => p.id !== id));
   }
 
+  function changeVehicleField<K extends VehicleField>(field: K, value: VehicleForm[K]) {
+    setVehicleForm((f) => ({ ...f, [field]: value }));
+    // Once edited, the value is the user's and a new AI run won't touch it
+    setSuggested((s) => {
+      if (!s.has(field)) return s;
+      const next = new Set(s);
+      next.delete(field);
+      return next;
+    });
+  }
+
+  function applySuggestion(analysis: Analysis): string[] {
+    const applied = applyAnalysis(vehicleForm, suggested, analysis);
+    setVehicleForm(applied.form);
+    setSuggested(applied.suggested);
+    return applied.changed.map((f) => vehicleFieldLabels[f]);
+  }
+
   function useDeviceLocation() {
     if (!("geolocation" in navigator)) {
       setLocationError("Tento prohlížeč neumí zjistit polohu. Vyberte místo na mapě.");
@@ -150,7 +180,10 @@ export function ReportFlow() {
   return (
     <div className="space-y-12">
       <Step number={1} title="Fotky">
-        <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
+        <div className="space-y-6">
+          <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
+          <AiAssist photos={photos} onResult={applySuggestion} onUsePlace={setAddress} />
+        </div>
       </Step>
 
       <Step number={2} title="Místo a čas">
@@ -233,6 +266,9 @@ export function ReportFlow() {
 
       <NoticeSection
         step={4}
+        form={vehicleForm}
+        suggested={suggested}
+        onChange={changeVehicleField}
         context={{
           authority: authority?.match?.authority ?? null,
           point: location?.point ?? null,
