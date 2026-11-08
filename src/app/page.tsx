@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
+import { RotatingExcuse } from "./rotating-excuse";
 
 const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
 
@@ -45,7 +46,7 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="pt-6 pb-10 sm:pt-8 sm:pb-12">
-          <p className="text-lg italic text-muted">„Já si tady jenom na minutku odskočím…“</p>
+          <RotatingExcuse />
           <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-balance sm:text-5xl">
             Nahlaste špatně zaparkované auto za minutu.
           </h1>

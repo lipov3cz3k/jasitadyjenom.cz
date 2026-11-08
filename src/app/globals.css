@@ -72,3 +72,40 @@ body {
 .marquee::-webkit-scrollbar {
   display: none;
 }
+
+/* Rotating excuse: the old ending rolls up and out, the new one rolls in from below */
+.excuse-roll {
+  display: inline-grid;
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+.excuse-roll > * {
+  grid-area: 1 / 1;
+}
+
+.excuse-in {
+  animation: excuse-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.excuse-out {
+  animation: excuse-out 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes excuse-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes excuse-out {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
