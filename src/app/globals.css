@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* `dark:` follows the explicit data-theme choice, otherwise the system preference */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -19,7 +31,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #0f1115;
     --foreground: #eceef2;
     --muted: #a1a7b3;
@@ -27,6 +39,15 @@
     --border: #2a2e37;
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0f1115;
+  --foreground: #eceef2;
+  --muted: #a1a7b3;
+  --surface: #171a20;
+  --border: #2a2e37;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -43,34 +64,48 @@ body {
 }
 
 /* Offenses marquee */
-@keyframes marquee {
+.marquee {
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent, #000 4rem, #000 calc(100% - 4rem), transparent);
+}
+
+.marquee::-webkit-scrollbar {
+  display: none;
+}
+
+/* Rotating excuse: the old ending rolls up and out, the new one rolls in from below */
+.excuse-roll {
+  display: inline-grid;
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+.excuse-roll > * {
+  grid-area: 1 / 1;
+}
+
+.excuse-in {
+  animation: excuse-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.excuse-out {
+  animation: excuse-out 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes excuse-in {
+  from {
+    transform: translateY(100%);
+  }
   to {
-    transform: translateX(-50%);
+    transform: none;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .marquee {
-    overflow-x: hidden;
-    mask-image: linear-gradient(to right, transparent, #000 4rem, #000 calc(100% - 4rem), transparent);
+@keyframes excuse-out {
+  from {
+    transform: none;
   }
-
-  .marquee-track {
-    animation: marquee 90s linear infinite;
-  }
-
-  .marquee:hover .marquee-track,
-  .marquee:focus-within .marquee-track {
-    animation-play-state: paused;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .marquee {
-    padding-inline: 1.25rem;
-  }
-
-  .marquee-duplicate {
-    display: none;
+  to {
+    transform: translateY(-100%);
   }
 }

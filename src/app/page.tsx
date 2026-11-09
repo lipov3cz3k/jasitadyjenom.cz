@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
+import { RotatingExcuse } from "./rotating-excuse";
 
 const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
 
@@ -37,36 +39,15 @@ const principles = [
   },
 ];
 
-function NoStoppingSign({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-      <circle cx="50" cy="50" r="46" fill="var(--color-sign-red)" />
-      <circle cx="50" cy="50" r="34" fill="var(--color-sign-blue)" />
-      <g stroke="var(--color-sign-red)" strokeWidth="10">
-        <line x1="22" y1="22" x2="78" y2="78" />
-        <line x1="78" y1="22" x2="22" y2="78" />
-      </g>
-    </svg>
-  );
-}
-
 export default function Home() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 sm:px-8">
-      <header className="flex items-center justify-between gap-4 py-6">
-        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-          <NoStoppingSign className="size-7" />
-          jasitadyjenom.cz
-        </Link>
-        <span className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted">
-          Připravujeme
-        </span>
-      </header>
+      <SiteHeader badge="Připravujeme" />
 
       <main className="flex-1">
-        <section className="py-16 sm:py-24">
-          <p className="text-lg italic text-muted">„Já si tady jenom na minutku odskočím…“</p>
-          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-balance sm:text-6xl">
+        <section className="pt-6 pb-10 sm:pt-8 sm:pb-12">
+          <RotatingExcuse />
+          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-balance sm:text-5xl">
             Nahlaste špatně zaparkované auto za minutu.
           </h1>
           <div className="mt-6 h-1.5 w-24 rounded-full bg-line-yellow" />
@@ -74,7 +55,7 @@ export default function Home() {
             Auto na chodníku, na přechodu nebo před vjezdem? Vyfoťte ho a aplikace za vás připraví
             podnět pro příslušný úřad, který odešlete svou datovou schránkou.
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
               href={GITHUB_URL}
               className="inline-flex items-center rounded-lg bg-sign-blue px-5 py-3 font-medium text-white transition hover:opacity-90"
@@ -85,7 +66,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section aria-label="Nejčastější prohřešky a co říká zákon" className="border-t border-border py-16">
+        <section aria-label="Nejčastější prohřešky a co říká zákon" className="border-t border-border pt-8 pb-16">
           <OffensesMarquee />
         </section>
 
@@ -123,9 +104,14 @@ export default function Home() {
 
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border py-8 text-sm text-muted">
         <span>© {new Date().getFullYear()} jasitadyjenom.cz · open source (MIT)</span>
-        <a href={GITHUB_URL} className="underline-offset-4 hover:underline">
-          GitHub
-        </a>
+        <nav className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/soukromi" className="underline-offset-4 hover:underline">
+            Ochrana soukromí
+          </Link>
+          <a href={GITHUB_URL} className="underline-offset-4 hover:underline">
+            GitHub
+          </a>
+        </nav>
       </footer>
     </div>
   );
