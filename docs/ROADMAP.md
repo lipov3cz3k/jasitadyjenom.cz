@@ -60,6 +60,22 @@ Cloud Runu, žádný API klíč). Výsledek je návrh, který uživatel zkontrol
 - [ ] Vyhodnocení přesnosti na sadě reálných fotek a ladění promptu
 - [ ] Zvážit vypnutí cache Vertex AI pro projekt
 
+## Etapa 4 – průkaznost podnětu
+
+Poučení z prvního odloženého podnětu: úřad napsal, že z fotek „nevyplývá, v jakém časovém
+úseku a kdy přesně vozidlo na místě stálo“. Fotky neupravujeme, čas doložíme z EXIF přímo v textu.
+
+- [x] Čas pořízení každé fotky (EXIF) v seznamu příloh, rozmezí zachycení a návod, kde ho úřad ověří
+- [x] U přestupků se zákazem zastavení (§ 27 odst. 1, § 53 odst. 2, B 28) věta, že na délce stání nezáleží
+- [x] Rozdělení „zákaz zastavení“ / „zákaz stání“; u zákazu stání upozornění na krátký časový úsek
+- [x] Upozornění na fotky bez času pořízení (přeposlané, upravené, snímky obrazovky)
+- [x] Text podnětu na míru přes LLM (`/api/draft`, druhé volání po kontrole formuláře): popis skutku,
+  společenská škodlivost a popisky fotek. Kostru (úřad, oznamovatel, RZ, místo, časy z EXIF, paragrafy)
+  dál skládá šablona, výstup modelu s paragrafy, daty a časy se zahazuje. Vzorový příklad v promptu
+  je anonymizovaný první podnět.
+- [x] Přepínač „řidič byl u vozidla“
+- [ ] Vyhodnocení textů na reálných případech, případně silnější model (`GEMINI_DRAFT_MODEL`)
+
 ## Později
 
 - Mapy.com jako zdroj map a geokódování

@@ -186,8 +186,9 @@ přidělí service accountu roli `roles/aiplatform.user` a nastaví proměnné p
 | `GOOGLE_CLOUD_PROJECT` | `var.project_id` | projekt pro Vertex AI |
 | `GOOGLE_CLOUD_LOCATION` | `eu` (`var.ai_location`) | EU multi-region endpoint, data se zpracují v EU |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` (`var.ai_model`) | model |
-| `AI_LIMIT_PER_HOUR` | `10` | rozpoznání na IP adresu za hodinu (nastavuje se jen ručně) |
-| `AI_LIMIT_PER_DAY` | `500` | rozpoznání celkem za den na jednu instanci (nastavuje se jen ručně) |
+| `GEMINI_DRAFT_MODEL` | `GEMINI_MODEL` | model pro psaní textu podnětu (nastavuje se jen ručně) |
+| `AI_LIMIT_PER_HOUR` | `10` | volání AI (rozpoznání i psaní textu) na IP adresu za hodinu (nastavuje se jen ručně) |
+| `AI_LIMIT_PER_DAY` | `500` | volání AI celkem za den na jednu instanci (nastavuje se jen ručně) |
 
 Jedno rozpoznání (až 4 fotky, zhruba 5 000 tokenů na vstupu a 1 000 na výstupu včetně
 myšlení) vyjde s Flash-Lite přibližně na 0,1 Kč, tisíc rozpoznání tedy asi na 100 Kč.

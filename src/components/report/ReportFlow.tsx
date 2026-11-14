@@ -60,6 +60,7 @@ export function ReportFlow() {
   const [authority, setAuthority] = useState<ResolvedAuthority | null>(null);
   const [authorityState, setAuthorityState] = useState<"idle" | "loading" | "error">("idle");
 
+  const [description, setDescription] = useState("");
   const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
   const [suggested, setSuggested] = useState<ReadonlySet<VehicleField>>(new Set());
 
@@ -119,6 +120,9 @@ export function ReportFlow() {
 
     const read = await Promise.all(items.map((i) => readPhotoMetadata(i.file)));
     items.forEach((item, n) => metadata.current.set(item.id, read[n]));
+    // Only an EXIF time can be checked by the authority; the file time changes on copying
+    const exifTimes = new Map(items.map((item, n) => [item.id, read[n].takenAtSource === "exif" ? read[n].takenAt : null]));
+    setPhotos((prev) => prev.map((p) => (exifTimes.has(p.id) ? { ...p, takenAt: exifTimes.get(p.id) } : p)));
     const combined = combineMetadata([...metadata.current.values()]);
 
     // A photo never overrides the user's manual choice
@@ -182,7 +186,11 @@ export function ReportFlow() {
       <Step number={1} title="Fotky">
         <div className="space-y-6">
           <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
-          <AiAssist photos={photos} onResult={applySuggestion} onUsePlace={setAddress} />
+          <AiAssist
+            photos={photos}
+            description={description}
+            onDescriptionChange={setDescription}
+            onResult={applySuggestion} onUsePlace={setAddress} />
         </div>
       </Step>
 
@@ -275,7 +283,8 @@ export function ReportFlow() {
           address,
           takenAt,
           timeInvalid: age === "expired" || age === "future",
-          attachments: photos.map((p) => p.file.name),
+          photos,
+          description,
         }}
       />
     </div>

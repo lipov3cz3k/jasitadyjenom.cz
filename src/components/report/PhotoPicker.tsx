@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { checkAttachments, formatBytes, MAX_ATTACHMENTS, MAX_MESSAGE_BYTES } from "@/lib/photos/rules";
+import {
+  checkAttachments,
+  formatBytes,
+  MAX_ATTACHMENTS,
+  MAX_MESSAGE_BYTES,
+  MIN_PARKING_SPAN_MINUTES,
+} from "@/lib/photos/rules";
 import { Notice } from "./Notice";
 
 export interface PhotoItem {
   id: string;
   file: File;
   url: string;
+  /** Capture time from EXIF; `undefined` while reading, `null` when the file has none. */
+  takenAt?: Date | null;
 }
 
 interface Props {
@@ -21,10 +29,12 @@ const tips = [
   "celé auto i s okolím – aby bylo vidět chodník, přechod, vjezd nebo zeleň",
   "dopravní značku, pokud jde o zákaz zastavení či stání",
   "u místa pro invalidy i to, že za sklem chybí parkovací průkaz",
+  `u zákazu stání (ne zastavení) první a poslední fotku s odstupem aspoň ${MIN_PARKING_SPAN_MINUTES} minut, aby bylo vidět, že auto stálo`,
 ];
 
 export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
   const { totalBytes, tooLarge, tooMany } = checkAttachments(photos.map((p) => p.file.size));
+  const withoutTime = photos.filter((p) => p.takenAt === null);
 
   return (
     <div className="space-y-4">
@@ -35,6 +45,10 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
             <li key={t}>{t}</li>
           ))}
         </ul>
+        <p className="mt-3 text-muted">
+          Přikládejte fotky tak, jak je pořídil telefon – neupravené a nepřeposlané. Čas pořízení je uložený přímo v
+          souboru a úřad podle něj ověří, kdy auto na místě stálo.
+        </p>
       </div>
 
       <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-8 text-center transition hover:border-sign-blue">
@@ -77,6 +91,14 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
         </>
       )}
 
+      {withoutTime.length > 0 && (
+        <Notice tone="warning">
+          {withoutTime.length === 1 ? "Fotka" : "Fotky"} {withoutTime.map((p) => p.file.name).join(", ")}{" "}
+          {withoutTime.length === 1 ? "nemá" : "nemají"} v sobě uložený čas pořízení, takže ho úřad nebude mít čím ověřit.
+          Bývá to u fotek přeposlaných přes WhatsApp nebo Messenger, upravených nebo snímků obrazovky. Pokud můžete,
+          přiložte originál přímo z galerie telefonu.
+        </Notice>
+      )}
       {tooLarge && (
         <Notice tone="warning">
           Fotky mají dohromady víc než {formatBytes(MAX_MESSAGE_BYTES)}, což je limit jedné datové zprávy. Pošlete jen

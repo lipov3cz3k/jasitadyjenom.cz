@@ -30,7 +30,9 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
         o telefonu a další metadata. Zpracování probíhá v Evropské unii. Náš server fotky ani popis neukládá ani
         nezapisuje do záznamů. Google podle podmínek Vertex AI tato data nepoužívá k trénování modelů. Na fotkách
         může být registrační značka a lidé v okolí, posílejte proto jen to, co je pro podnět potřeba. Výsledek je
-        jen návrh, který před vytvořením podnětu zkontrolujete.
+        jen návrh, který před vytvořením podnětu zkontrolujete. Když necháte AI napsat text podnětu na míru, pošleme
+        stejně zmenšené fotky, váš popis situace, popis vozidla a druh přestupku. Vaše jméno, adresu, registrační
+        značku ani místo přestupku přitom neposíláme – ty do textu doplní až váš prohlížeč.
       </>
     ),
   },

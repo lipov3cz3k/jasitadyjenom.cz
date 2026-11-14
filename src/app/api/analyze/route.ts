@@ -1,6 +1,6 @@
-import { GoogleGenAI, ThinkingLevel, type Part } from "@google/genai";
+import { ThinkingLevel, type Part } from "@google/genai";
 import { SYSTEM_INSTRUCTION, userPrompt } from "@/lib/analysis/prompt";
-import { clientIp, RateLimiter } from "@/lib/analysis/rate-limit";
+import { clientIp } from "@/lib/analysis/rate-limit";
 import {
   analysisJsonSchema,
   MAX_DESCRIPTION_LENGTH,
@@ -9,43 +9,19 @@ import {
   parseAnalysis,
   type Analysis,
 } from "@/lib/analysis/schema";
-
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite";
-const TIMEOUT_MS = 30_000;
-
-const limiter = new RateLimiter({
-  perClient: Number(process.env.AI_LIMIT_PER_HOUR ?? 10),
-  perClientWindowMs: 60 * 60 * 1000,
-  global: Number(process.env.AI_LIMIT_PER_DAY ?? 500),
-  globalWindowMs: 24 * 60 * 60 * 1000,
-});
-
-let client: GoogleGenAI | null | undefined;
-
-/**
- * Vertex AI with the Cloud Run service account in production (no key, EU endpoint),
- * a Gemini API key for local development.
- */
-function getClient(): GoogleGenAI | null {
-  if (client !== undefined) return client;
-  const apiKey = process.env.GEMINI_API_KEY;
-  const project = process.env.GOOGLE_CLOUD_PROJECT;
-  if (apiKey) client = new GoogleGenAI({ apiKey });
-  else if (project) client = new GoogleGenAI({ vertexai: true, project, location: process.env.GOOGLE_CLOUD_LOCATION ?? "eu" });
-  else client = null;
-  return client;
-}
-
-function error(status: number, message: string, headers?: HeadersInit) {
-  return Response.json({ error: message }, { status, headers });
-}
+import {
+  errorResponse as error,
+  getClient,
+  isForeignOrigin,
+  limiter,
+  MODEL,
+  rateLimitResponse,
+  TIMEOUT_MS,
+  toInlineJpeg,
+} from "@/lib/analysis/server";
 
 export async function POST(request: Request) {
-  // Browsers always send Origin on POST; rejects other sites calling the endpoint from their pages
-  const origin = request.headers.get("origin");
-  if (origin && new URL(origin).host !== request.headers.get("host")) {
-    return error(403, "Požadavek z jiného webu.");
-  }
+  if (isForeignOrigin(request)) return error(403, "Požadavek z jiného webu.");
 
   const ai = getClient();
   if (!ai) return error(503, "Rozpoznávání pomocí AI teď není k dispozici.");
@@ -67,21 +43,9 @@ export async function POST(request: Request) {
   }
 
   const limit = limiter.take(clientIp(request.headers));
-  if (!limit.ok) {
-    return error(
-      429,
-      limit.scope === "client"
-        ? "Rozpoznávání jste použili už mockrát. Zkuste to později, nebo vyplňte formulář ručně."
-        : "Dnešní limit rozpoznávání je vyčerpaný. Vyplňte prosím formulář ručně.",
-      { "Retry-After": String(limit.retryAfterSeconds) },
-    );
-  }
+  if (!limit.ok) return rateLimitResponse(limit.retryAfterSeconds, limit.scope);
 
-  const parts: Part[] = await Promise.all(
-    photos.map(async (p) => ({
-      inlineData: { mimeType: "image/jpeg", data: Buffer.from(await p.arrayBuffer()).toString("base64") },
-    })),
-  );
+  const parts: Part[] = await Promise.all(photos.map(toInlineJpeg));
   parts.push({ text: userPrompt(description, photos.length) });
 
   let analysis: Analysis;

@@ -19,7 +19,10 @@ const base: NoticeInput = {
   address: "Bulharská 615/5, Vršovice, 10100 Praha 10",
   point: { lat: 50.0718, lon: 14.457 },
   takenAt: new Date("2026-11-05T07:30:00Z"),
-  attachments: ["IMG_0001.jpg", "IMG_0002.jpg"],
+  attachments: [
+    { name: "IMG_0002.jpg", takenAt: new Date("2026-11-05T07:36:05Z") },
+    { name: "IMG_0001.jpg", takenAt: new Date("2026-11-05T07:30:12Z") },
+  ],
   reporter: { fullName: "Jana Nováková", address: "Ruská 1, 101 00 Praha 10", dataBoxId: "abc1234", email: "" },
   createdAt: new Date("2026-11-05T09:00:00Z"),
 };
@@ -48,16 +51,19 @@ Popis vozidla: Škoda Octavia, stříbrná
 Místo: Bulharská 615/5, Vršovice, 10100 Praha 10
 Souřadnice GPS: 50.071800, 14.457000
 Datum a čas: 5. 11. 2026 8:30
+Vozidlo je na fotografiích zachyceno od 5. 11. 2026 8:30:12 do 8:36:05 (5 min).
 
 3. Popis jednání
 Vozidlo stálo na chodníku, který smějí užívat pouze chodci. Pro kočárek zbýval průchod asi 50 cm.
 Tím mohlo dojít k porušení § 53 odst. 2 zákona č. 361/2000 Sb., o provozu na pozemních komunikacích.
+Na tomto místě zákon zakazuje i zastavení vozidla, pro naplnění skutkové podstaty proto není rozhodné, jak dlouho vozidlo stálo.
 Řidič nebyl v době pořízení fotografií u vozidla. Pokud se řidiče nepodaří zjistit, navrhuji postupovat vůči provozovateli vozidla podle § 125f odst. 2 písm. a) zákona č. 361/2000 Sb., o provozu na pozemních komunikacích (neoprávněné zastavení nebo stání).
 
 4. Důkazy
 Fotografie pořízené na místě přikládám jako přílohy této zprávy:
-– IMG_0001.jpg
-– IMG_0002.jpg
+– IMG_0001.jpg (pořízena 5. 11. 2026 8:30:12)
+– IMG_0002.jpg (pořízena 5. 11. 2026 8:36:05)
+Časy pořízení pocházejí z metadat EXIF (údaj DateTimeOriginal) přiložených souborů. Lze je ověřit ve vlastnostech souboru (ve Windows: pravé tlačítko myši › Vlastnosti › Podrobnosti › Datum pořízení).
 V případě potřeby mohu ve věci podat svědeckou výpověď.
 
 5. Žádost o sdělení
@@ -79,6 +85,56 @@ Jana Nováková`);
     const { body } = buildNotice({ ...base, vehicle: "  ", details: undefined });
     expect(body).toContain("Registrační značka: 1AB 2345\n\n2. Místo a čas");
     expect(body).toContain("pouze chodci.\nTím mohlo");
+  });
+
+  it("photos without an EXIF time: no span, no EXIF note, listed last", () => {
+    const { body } = buildNotice({
+      ...base,
+      attachments: [
+        { name: "forwarded.jpg", takenAt: null },
+        { name: "IMG_0001.jpg", takenAt: new Date("2026-11-05T07:30:12Z") },
+      ],
+    });
+    expect(body).not.toContain("zachyceno od");
+    expect(body).toContain("– IMG_0001.jpg (pořízena 5. 11. 2026 8:30:12)\n– forwarded.jpg\n");
+    expect(body).toContain("metadat EXIF");
+    const none = buildNotice({ ...base, attachments: [{ name: "a.jpg", takenAt: null }] }).body;
+    expect(none).not.toContain("EXIF");
+  });
+
+  it("span across midnight shows both dates", () => {
+    const { body } = buildNotice({
+      ...base,
+      attachments: [
+        { name: "a.jpg", takenAt: new Date("2026-11-05T22:58:00Z") },
+        { name: "b.jpg", takenAt: new Date("2026-11-05T23:10:30Z") },
+      ],
+    });
+    expect(body).toContain("zachyceno od 5. 11. 2026 23:58:00 do 6. 11. 2026 0:10:30 (12 min).");
+  });
+
+  it("AI draft replaces the generic description and adds harm and captions", () => {
+    const { body } = buildNotice({
+      ...base,
+      driverPresent: true,
+      draft: {
+        facts: "Dodávka stála všemi koly na chodníku.\n\nŘidič byl upozorněn a odešel.",
+        harm: [{ title: "Omezení průchodu chodců", text: "Zůstalo méně než 0,8 m." }],
+      },
+      attachments: [{ name: "PXL_1.jpg", takenAt: new Date("2026-11-05T07:30:12Z"), caption: "celkový pohled" }],
+    });
+    expect(body).toContain("3. Popis jednání\nDodávka stála všemi koly na chodníku.\n\nŘidič byl upozorněn a odešel.\nTím mohlo");
+    expect(body).not.toContain("Pro kočárek zbýval");
+    expect(body).not.toContain("Řidič nebyl");
+    expect(body).toContain("Pokud se řidiče nepodaří zjistit");
+    expect(body).toContain("Společenská škodlivost jednání:\n– Omezení průchodu chodců: Zůstalo méně než 0,8 m.\n\n4. Důkazy");
+    expect(body).toContain("– PXL_1.jpg (pořízena 5. 11. 2026 8:30:12) – celkový pohled\n");
+  });
+
+  it("only offences that ban stopping say the duration doesn't matter", () => {
+    expect(buildNotice({ ...base, offense: "zakaz-zastaveni" }).body).toContain("zakazuje i zastavení");
+    expect(buildNotice({ ...base, offense: "zakaz-stani" }).body).not.toContain("zakazuje i zastavení");
+    expect(buildNotice({ ...base, offense: "jine", details: "x" }).body).not.toContain("zakazuje i zastavení");
   });
 
   it("names the department when known", () => {

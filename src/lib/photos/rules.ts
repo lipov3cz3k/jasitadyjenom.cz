@@ -41,3 +41,16 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} kB`;
   return `${(bytes / (1024 * 1024)).toLocaleString("cs-CZ", { maximumFractionDigits: 1 })} MB`;
 }
+
+/**
+ * Parking (unlike stopping) means staying longer than needed to get in/out or load (§ 2 Act No. 361/2000 Coll.).
+ * The law sets no minimum; a few minutes between the first and last photo is our rule of thumb.
+ */
+export const MIN_PARKING_SPAN_MINUTES = 5;
+
+/** Minutes between the earliest and the latest capture time; `null` with fewer than two times. */
+export function photoSpanMinutes(times: Date[]): number | null {
+  if (times.length < 2) return null;
+  const ms = times.map((t) => t.getTime());
+  return (Math.max(...ms) - Math.min(...ms)) / 60_000;
+}

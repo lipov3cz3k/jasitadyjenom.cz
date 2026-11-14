@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkAttachments, evaluatePhotoAge, formatBytes, MAX_MESSAGE_BYTES } from "./rules";
+import { checkAttachments, evaluatePhotoAge, formatBytes, MAX_MESSAGE_BYTES, photoSpanMinutes } from "./rules";
 
 describe("evaluatePhotoAge", () => {
   const now = new Date("2026-11-05T12:00:00Z");
@@ -40,5 +40,18 @@ describe("formatBytes", () => {
     expect(formatBytes(500)).toBe("1 kB");
     expect(formatBytes(300 * 1024)).toBe("300 kB");
     expect(formatBytes(3.45 * 1024 * 1024)).toBe("3,5 MB");
+  });
+});
+
+describe("photoSpanMinutes", () => {
+  const at = (hms: string) => new Date(`2026-09-15T${hms}+02:00`);
+
+  it("needs at least two times", () => {
+    expect(photoSpanMinutes([])).toBeNull();
+    expect(photoSpanMinutes([at("09:21:43")])).toBeNull();
+  });
+
+  it("ignores order", () => {
+    expect(photoSpanMinutes([at("09:24:23"), at("09:21:43"), at("09:23:56")])).toBeCloseTo(2 + 40 / 60);
   });
 });

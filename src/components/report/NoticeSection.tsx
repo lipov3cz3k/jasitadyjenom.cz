@@ -3,12 +3,16 @@
 import { useState } from "react";
 import type { VehicleField, VehicleForm } from "@/lib/analysis/apply";
 import type { Authority } from "@/lib/authority/types";
-import { OFFENSES, type OffenseId } from "@/lib/notice/offenses";
+import { OFFENSES, offenseById, type OffenseId } from "@/lib/notice/offenses";
 import { clearReporter, loadReporter, saveReporter } from "@/lib/notice/reporter-storage";
-import { buildNotice, looksLikeCzechPlate, type Reporter } from "@/lib/notice/template";
+import { buildNotice, looksLikeCzechPlate, type Attachment, type Reporter } from "@/lib/notice/template";
+import type { DraftFacts } from "@/lib/draft/schema";
 import type { LatLon } from "@/lib/photos/metadata";
+import { MIN_PARKING_SPAN_MINUTES, photoSpanMinutes } from "@/lib/photos/rules";
 import { CopyButton } from "./CopyButton";
+import { DraftAssist, draftKey, harmFromLines, type DraftState } from "./DraftAssist";
 import { Notice } from "./Notice";
+import type { PhotoItem } from "./PhotoPicker";
 import { Step } from "./Step";
 
 const PORTAL_URL = "https://www.mojedatovaschranka.cz/";
@@ -21,7 +25,9 @@ export interface NoticeContext {
   takenAt: Date | null;
   /** The photo is past the limitation period or dated in the future. */
   timeInvalid: boolean;
-  attachments: string[];
+  photos: PhotoItem[];
+  /** The user's description of the situation from the AI step. */
+  description: string;
 }
 
 const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", email: "" };
@@ -45,9 +51,29 @@ export default function NoticeSection({ context, step, form, suggested, onChange
   const [remember, setRemember] = useState(stored !== null);
 
   const [requested, setRequested] = useState(false);
+  const [driverPresent, setDriverPresent] = useState(false);
+  const [draft, setDraft] = useState<DraftState | null>(null);
+
+  const draftFacts: DraftFacts | null = offense
+    ? { offense, vehicle: vehicle.trim(), details: details.trim(), description: context.description.trim() }
+    : null;
+  const activeDraft = draft && draftFacts && draft.key === draftKey(draftFacts) ? draft : null;
+
+  const attachments: Attachment[] = context.photos.map((p) => ({
+    name: p.file.name,
+    takenAt: p.takenAt ?? null,
+    caption: activeDraft?.captions[p.id],
+  }));
+
+  const span = photoSpanMinutes(attachments.flatMap((a) => (a.takenAt ? [a.takenAt] : [])));
+  const shortForParking =
+    offense !== "" &&
+    offenseById(offense).bans === "parking" &&
+    attachments.length > 0 &&
+    (span === null || span < MIN_PARKING_SPAN_MINUTES);
 
   const missing = [
-    context.attachments.length === 0 && "fotky",
+    attachments.length === 0 && "fotky",
     !context.point && "místo",
     !context.authority && "příslušný úřad",
     !context.address.trim() && "adresa místa",
@@ -84,7 +110,11 @@ export default function NoticeSection({ context, step, form, suggested, onChange
           address: context.address,
           point: context.point,
           takenAt: context.takenAt,
-          attachments: context.attachments,
+          attachments,
+          driverPresent,
+          draft: activeDraft?.facts.trim()
+            ? { facts: activeDraft.facts.trim(), harm: harmFromLines(activeDraft.harm) }
+            : undefined,
           reporter: anonymous ? null : reporter,
           createdAt: new Date(),
         })
@@ -150,6 +180,32 @@ export default function NoticeSection({ context, step, form, suggested, onChange
                 </option>
               ))}
             </select>
+          </label>
+          {shortForParking && (
+            <Notice tone="warning">
+              Zákaz stání nebrání krátkému zastavení, třeba k vystoupení nebo naložení. Z fotek by proto mělo být
+              poznat, že auto stálo déle – ideálně první a poslední fotka s odstupem aspoň {MIN_PARKING_SPAN_MINUTES}{" "}
+              minut.{" "}
+              {span === null
+                ? "Teď nejde určit, jak dlouho auto stálo (chybí aspoň dvě fotky s časem pořízení)."
+                : `Vaše fotky pokrývají jen ${Math.floor(span)} min.`}{" "}
+              Jinak úřad podnět nejspíš odloží.
+            </Notice>
+          )}
+
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={driverPresent}
+              onChange={(e) => setDriverPresent(e.target.checked)}
+            />
+            <span>
+              Řidič byl u vozidla (např. jste s ním mluvili)
+              <span className="block text-xs text-muted">
+                Jinak podnět uvede, že řidič u vozidla nebyl. Co vám řekl, popište v doplňujícím popisu.
+              </span>
+            </span>
           </label>
 
           <label className="block text-sm">
@@ -267,13 +323,17 @@ export default function NoticeSection({ context, step, form, suggested, onChange
             Vytvořit text podnětu
           </button>
         ) : (
-          notice && (
-            <NoticeOutput
-              notice={notice}
-              dataBoxId={context.authority!.dataBoxId}
-              attachments={context.attachments}
-              onDownload={download}
-            />
+          notice &&
+          draftFacts && (
+            <div className="space-y-8">
+              <DraftAssist photos={context.photos} facts={draftFacts} draft={draft} onDraft={setDraft} />
+              <NoticeOutput
+                notice={notice}
+                dataBoxId={context.authority!.dataBoxId}
+                attachments={attachments.map((a) => a.name)}
+                onDownload={download}
+              />
+            </div>
           )
         )}
       </Step>
