@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
 import { RotatingExcuse } from "./rotating-excuse";
@@ -8,30 +9,30 @@ const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
 const steps = [
   {
     title: "Vyfoťte",
-    text: "Stačí fotka z telefonu. Místo a čas si aplikace přečte přímo z fotografie.",
+    text: "Stačí fotka z telefonu. Místo a čas si aplikace přečte z fotografie, nebo je vyberete na mapě.",
   },
   {
-    title: "Zkontrolujte",
-    text: "Aplikace rozpozná registrační značku, navrhne typ přestupku a dohledá příslušný úřad. Vy jen ověříte, že vše sedí.",
+    title: "Doplňte",
+    text: "Opíšete registrační značku a vyberete, co se stalo. Příslušný úřad i jeho datovou schránku dohledá aplikace.",
   },
   {
     title: "Odešlete",
-    text: "Připravený podnět zkopírujete do své datové schránky. Zprávy úřadům jsou zdarma.",
+    text: "Hotový podnět zkopírujete do své datové schránky a přiložíte fotky. Zprávy úřadům jsou zdarma.",
   },
 ];
 
 const principles = [
   {
-    title: "Fotky neukládáme",
-    text: "Fotografie se zpracují jednorázově a hned se zahodí. Nemáme databázi oznamovatelů ani aut.",
+    title: "Fotky neopustí váš telefon",
+    text: "Fotky i vaše údaje zpracovává jen váš prohlížeč. Nemáme databázi oznamovatelů ani aut.",
   },
   {
     title: "Žádné sledování",
-    text: "Bez reklam, bez Google Analytics, bez sledovacích cookies.",
+    text: "Bez reklam, bez analytiky, bez cookies.",
   },
   {
-    title: "Provoz v EU",
-    text: "Aplikace běží v datacentru v Evropské unii.",
+    title: "Poloha jen kvůli úřadu",
+    text: "Souřadnice posíláme jen Českému úřadu zeměměřickému a katastrálnímu, abychom zjistili adresu a příslušný úřad.",
   },
   {
     title: "Otevřený kód",
@@ -42,7 +43,7 @@ const principles = [
 export default function Home() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 sm:px-8">
-      <SiteHeader badge="Připravujeme" />
+      <SiteHeader badge="Beta" />
 
       <main className="flex-1">
         <section className="pt-6 pb-10 sm:pt-8 sm:pb-12">
@@ -56,13 +57,15 @@ export default function Home() {
             podnět pro příslušný úřad, který odešlete svou datovou schránkou.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a
-              href={GITHUB_URL}
+            <Link
+              href="/nahlasit"
               className="inline-flex items-center rounded-lg bg-sign-blue px-5 py-3 font-medium text-white transition hover:opacity-90"
             >
-              Sledovat vývoj na GitHubu
+              Nahlásit auto
+            </Link>
+            <a href={GITHUB_URL} className="text-sm font-medium text-muted underline-offset-4 hover:underline">
+              Zdrojový kód na GitHubu
             </a>
-            <span className="text-sm text-muted">Aplikaci právě stavíme.</span>
           </div>
         </section>
 
@@ -72,7 +75,7 @@ export default function Home() {
 
         <section aria-labelledby="jak-to-funguje" className="border-t border-border py-16">
           <h2 id="jak-to-funguje" className="text-2xl font-semibold tracking-tight">
-            Jak to bude fungovat
+            Jak to funguje
           </h2>
           <ol className="mt-8 grid gap-5 sm:grid-cols-3">
             {steps.map((step, i) => (
@@ -102,17 +105,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border py-8 text-sm text-muted">
-        <span>© {new Date().getFullYear()} jasitadyjenom.cz · open source (MIT)</span>
-        <nav className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link href="/soukromi" className="underline-offset-4 hover:underline">
-            Ochrana soukromí
-          </Link>
-          <a href={GITHUB_URL} className="underline-offset-4 hover:underline">
-            GitHub
-          </a>
-        </nav>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -28,6 +28,20 @@ resource "google_cloud_run_v2_service" "app" {
         container_port = 8080
       }
 
+      # AI pre-fill of the report form via Vertex AI (src/app/api/analyze)
+      env {
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = var.project_id
+      }
+      env {
+        name  = "GOOGLE_CLOUD_LOCATION"
+        value = var.ai_location
+      }
+      env {
+        name  = "GEMINI_MODEL"
+        value = var.ai_model
+      }
+
       resources {
         limits = {
           cpu    = "1"
@@ -52,6 +66,12 @@ resource "google_cloud_run_v2_service" "app" {
   }
 
   depends_on = [google_project_service.this]
+}
+
+resource "google_project_iam_member" "runtime_vertex_ai" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "public" {

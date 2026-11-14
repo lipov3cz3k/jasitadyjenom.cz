@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
@@ -8,14 +10,71 @@ export const metadata: Metadata = {
 
 const GITHUB_ISSUES = "https://github.com/lipov3cz3k/jasitadyjenom.cz/issues";
 
-const sections: { title: string; body: React.ReactNode }[] = [
+const sections: { id?: string; title: string; body: React.ReactNode }[] = [
+  {
+    title: "Fotky",
+    body: (
+      <>
+        Fotky zpracovává váš prohlížeč. Čas a polohu pořízení čte přímo z fotky ve vašem zařízení. Nikam se
+        neodesílají, pokud nenecháte zapnuté rozpoznání pomocí AI. Úřadu je posíláte sami jako přílohu zprávy ze své datové schránky.
+      </>
+    ),
+  },
+  {
+    id: "ai",
+    title: "Rozpoznání a text pomocí AI (nepovinné)",
+    body: (
+      <>
+        Rozpoznání můžete na první obrazovce vypnout. Když ho necháte zapnuté, pošleme po kliknutí na „Pokračovat“
+        nejvýš 4 fotky a váš popis situace přes náš server modelu Gemini
+        ve službě Google Vertex AI. Fotky před odesláním zmenší váš prohlížeč, a tím z nich zmizí poloha, údaje
+        o telefonu a další metadata. Zpracování probíhá v Evropské unii. Náš server fotky ani popis neukládá ani
+        nezapisuje do záznamů. Google podle podmínek Vertex AI tato data nepoužívá k trénování modelů. Na fotkách
+        může být registrační značka a lidé v okolí, posílejte proto jen to, co je pro podnět potřeba. Výsledek je
+        jen návrh, který před vytvořením podnětu zkontrolujete. Pro napsání textu podnětu na míru pak pošleme stejně
+        zmenšené fotky, váš popis situace, popis vozidla a druh přestupku. Vaše jméno, adresu, registrační
+        značku ani místo přestupku přitom neposíláme – ty do textu doplní až váš prohlížeč.
+      </>
+    ),
+  },
+  {
+    title: "Poloha",
+    body: (
+      <>
+        Abychom zjistili adresu místa, posíláme souřadnice zaokrouhlené na zhruba 1 metr službě Českého úřadu
+        zeměměřického a katastrálního (ags.cuzk.gov.cz). Pokud je místo blízko hranice dvou úřadů, ověřujeme u stejné
+        služby i příslušný úřad. Jinak úřad hledáme přímo v prohlížeči podle dat, která si stáhne z našeho webu. ČÚZK
+        při tom vidí souřadnice a vaši IP adresu. Polohu zařízení zjišťujeme jen po kliknutí na „Použít moji polohu“.
+      </>
+    ),
+  },
+  {
+    title: "Mapa",
+    body: (
+      <>
+        Mapové podklady načítáme ze služby OpenFreeMap (tiles.openfreemap.org), která je doručuje přes síť Cloudflare.
+        Ta při tom vidí vaši IP adresu a výřez mapy, který si prohlížíte.
+      </>
+    ),
+  },
+  {
+    title: "Vaše jméno a adresa",
+    body: (
+      <>
+        Údaje oznamovatele zůstávají v prohlížeči. Uložíme je (do úložiště prohlížeče, localStorage) jen tehdy, když
+        zaškrtnete „Zapamatovat v tomto prohlížeči“. Smažete je tlačítkem „Smazat uložené údaje“ nebo vymazáním dat
+        webu v prohlížeči. Text podnětu odesíláte sami a my ho nevidíme.
+      </>
+    ),
+  },
   {
     title: "Server",
     body: (
       <>
         Web běží na Google Cloud Run v Evropské unii (Belgie). Jako u každého webu vznikají technické záznamy
         o požadavcích (IP adresa, adresa stránky, typ prohlížeče). Uchovávají se 30 dní a používáme je jen
-        k zajištění provozu a bezpečnosti.
+        k zajištění provozu a bezpečnosti. Abychom omezili počet použití AI, server si počítá požadavky podle IP
+        adresy, ale jen v operační paměti a nic z toho neukládá.
       </>
     ),
   },
@@ -53,13 +112,19 @@ export default function PrivacyPage() {
         </p>
         <div className="mt-10 space-y-8">
           {sections.map((s) => (
-            <section key={s.title}>
+            <section key={s.title} id={s.id} className="scroll-mt-6">
               <h2 className="text-lg font-semibold">{s.title}</h2>
               <p className="mt-2 leading-relaxed text-muted">{s.body}</p>
             </section>
           ))}
         </div>
+        <p className="mt-12">
+          <Link href="/nahlasit" className="font-medium text-sign-blue underline">
+            Nahlásit auto →
+          </Link>
+        </p>
       </main>
+      <SiteFooter />
     </div>
   );
 }

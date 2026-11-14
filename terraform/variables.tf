@@ -32,3 +32,15 @@ variable "cloudflare_zone" {
   type        = string
   default     = "jasitadyjenom.cz"
 }
+
+variable "ai_location" {
+  description = "Vertex AI location for Gemini. \"eu\" is the EU multi-region endpoint (aiplatform.eu.rep.googleapis.com)."
+  type        = string
+  default     = "eu"
+}
+
+variable "ai_model" {
+  description = "Gemini model used to pre-fill the report form from photos."
+  type        = string
+  default     = "gemini-3.5-flash-lite"
+}

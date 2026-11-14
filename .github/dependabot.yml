@@ -16,6 +16,17 @@ updates:
         patterns: ["*"]
         update-types: [minor, patch]
 
+  - package-ecosystem: npm
+    directory: /data-pipeline
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      data-pipeline:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
   - package-ecosystem: docker
     directory: /
     schedule:

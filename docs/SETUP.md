@@ -27,7 +27,7 @@ export REGION=europe-west1
 | Ověření domény | Prokázání vlastnictví domény v Search Console je interaktivní. |
 | Zóna v Cloudflare a NS servery u registrátora | Zóna se zakládá jednou a její smazání by shodilo celou doménu. NS (u `.cz` NSSET) se mění u registrátora, pro WEDOS Terraform provider není. DNS záznamy pro Cloud Run už Terraform spravuje. |
 | GitHub Actions variables | Terraform by potřeboval GitHub token s právy na repozitář. |
-| Hodnoty tajemství (budoucí `GEMINI_API_KEY`) | Hodnota by skončila v Terraform state. Až přijde na řadu, Terraform založí jen secret bez hodnoty a verzi přidáš přes `gcloud secrets versions add`. |
+| Hodnoty tajemství | Hodnota by skončila v Terraform state. Terraform proto zakládá jen secret bez hodnoty a verzi přidáš přes `gcloud secrets versions add`. Gemini žádné tajemství nepotřebuje, volá se přes Vertex AI pod service accountem Cloud Runu. |
 
 ## 1. Projekt a billing
 
@@ -154,7 +154,17 @@ Totéž jde nastavit ručně v **Settings → Secrets and variables → Actions 
 
 Dokud `GCP_WORKLOAD_IDENTITY_PROVIDER` není nastavená, workflow Deploy se přeskakuje.
 
-## 9. První nasazení
+## 9. Automatická aktualizace dat
+
+Workflow [Data update](../.github/workflows/data-update.yml) jednou měsíčně stáhne
+hranice ORP a seznam úřadů s datovými schránkami a při změně založí PR. Aby to
+mohl udělat, zapni v **Settings → Actions → General → Workflow permissions**
+volbu **„Allow GitHub Actions to create and approve pull requests“**.
+
+PR založený z GitHub Actions nespouští CI (omezení `GITHUB_TOKEN`). Testy proto
+běží přímo ve workflow Data update. Pokud chceš CI i na PR, zavři ho a znovu otevři.
+
+## 10. První nasazení
 
 Push do `main` (mimo změny v `terraform/`, `docs/` a `*.md`), nebo ruční spuštění:
 
@@ -164,3 +174,26 @@ gh workflow run deploy.yml
 
 Přihlášení přes Workload Identity Federation projde jen z repozitáře
 `lipov3cz3k/jasitadyjenom.cz` a jen z větve `main`.
+
+## 11. Předvyplnění pomocí AI
+
+Endpoint `/api/analyze` volá Gemini přes Vertex AI pod service accountem Cloud Runu,
+takže žádný API klíč ani secret není potřeba. Terraform zapne `aiplatform.googleapis.com`,
+přidělí service accountu roli `roles/aiplatform.user` a nastaví proměnné prostředí:
+
+| Proměnná | Výchozí hodnota | Význam |
+|---|---|---|
+| `GOOGLE_CLOUD_PROJECT` | `var.project_id` | projekt pro Vertex AI |
+| `GOOGLE_CLOUD_LOCATION` | `eu` (`var.ai_location`) | EU multi-region endpoint, data se zpracují v EU |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` (`var.ai_model`) | model |
+| `GEMINI_DRAFT_MODEL` | `GEMINI_MODEL` | model pro psaní textu podnětu (nastavuje se jen ručně) |
+| `AI_LIMIT_PER_HOUR` | `10` | volání AI (rozpoznání i psaní textu) na IP adresu za hodinu (nastavuje se jen ručně) |
+| `AI_LIMIT_PER_DAY` | `500` | volání AI celkem za den na jednu instanci (nastavuje se jen ručně) |
+
+Jedno rozpoznání (až 4 fotky, zhruba 5 000 tokenů na vstupu a 1 000 na výstupu včetně
+myšlení) vyjde s Flash-Lite přibližně na 0,1 Kč, tisíc rozpoznání tedy asi na 100 Kč.
+Limity drží jednotlivé instance v paměti a při max. 2 instancích je denní strop nejvýš
+dvojnásobný. Pojistkou proti neočekávané útratě zůstává rozpočet z kroku 2.
+
+Bez `GOOGLE_CLOUD_PROJECT` (a bez `GEMINI_API_KEY`) endpoint vrací 503 a aplikace
+funguje dál, jen bez předvyplnění.
