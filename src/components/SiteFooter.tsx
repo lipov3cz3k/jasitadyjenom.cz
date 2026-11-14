@@ -9,10 +9,10 @@ export function SiteFooter() {
   return (
     <footer className="space-y-3 border-t border-border py-8 text-sm text-muted">
       <nav className="flex flex-wrap gap-x-5 gap-y-2">
-        <Link href="/nahlasit" className="underline-offset-4 hover:underline">
+        <Link prefetch={false} href="/nahlasit" className="underline-offset-4 hover:underline">
           Nahlásit auto
         </Link>
-        <Link href="/soukromi" className="underline-offset-4 hover:underline">
+        <Link prefetch={false} href="/soukromi" className="underline-offset-4 hover:underline">
           Ochrana soukromí
         </Link>
         <a href={GITHUB_URL} className="underline-offset-4 hover:underline">

@@ -197,3 +197,24 @@ dvojnásobný. Pojistkou proti neočekávané útratě zůstává rozpočet z kr
 
 Bez `GOOGLE_CLOUD_PROJECT` (a bez `GEMINI_API_KEY`) endpoint vrací 503 a aplikace
 funguje dál, jen bez předvyplnění.
+
+## 12. Přehled používání
+
+Terraform (`terraform/monitoring.tf`) založí v Cloud Loggingu tři log-based metriky
+z logů požadavků Cloud Runu a dashboard **„jasitadyjenom – používání“**
+(Cloud Console → Monitoring → Dashboards):
+
+| Metrika | Co počítá |
+|---|---|
+| `page_views` | otevření `/`, `/nahlasit` a `/soukromi` za den, bez známých robotů a náhledů odkazů |
+| `ai_requests` | volání `/api/analyze` (rozpoznání) a `/api/draft` (text podnětu) podle HTTP statusu |
+| `ai_latency` | doba odpovědi úspěšných volání AI |
+
+Metriky obsahují jen počty a krátké popisky (stránka, endpoint, status), žádné IP adresy
+ani user agenty. V prohlížeči neběží žádný měřicí skript. Interní odkazy mají vypnutý
+prefetch (`<Link prefetch={false}>`), aby se do počtů nepletlo přednačítání a každá
+návštěva byla jeden požadavek v logu. Při přidání nového odkazu to dodržte.
+
+Metriky se počítají až od chvíle, kdy vzniknou, do minulosti nejdou. Vejdou se do volného
+limitu Cloud Monitoringu. Podněty vytvořené bez AI, kopírování textu ani odeslání
+podnětu se nezměří, ty se odehrávají jen v prohlížeči.
