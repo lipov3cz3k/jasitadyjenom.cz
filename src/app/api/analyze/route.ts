@@ -14,6 +14,7 @@ import {
   getClient,
   isForeignOrigin,
   limiter,
+  rejectOversized,
   MODEL,
   rateLimitResponse,
   TIMEOUT_MS,
@@ -22,6 +23,8 @@ import {
 
 export async function POST(request: Request) {
   if (isForeignOrigin(request)) return error(403, "Požadavek z jiného webu.");
+  const oversized = rejectOversized(request);
+  if (oversized) return oversized;
 
   const ai = getClient();
   if (!ai) return error(503, "Rozpoznávání pomocí AI teď není k dispozici.");

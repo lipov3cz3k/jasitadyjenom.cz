@@ -5,6 +5,7 @@ import {
   getClient,
   isForeignOrigin,
   limiter,
+  rejectOversized,
   MODEL,
   rateLimitResponse,
   TIMEOUT_MS,
@@ -18,6 +19,8 @@ const DRAFT_MODEL = process.env.GEMINI_DRAFT_MODEL ?? MODEL;
 
 export async function POST(request: Request) {
   if (isForeignOrigin(request)) return error(403, "Požadavek z jiného webu.");
+  const oversized = rejectOversized(request);
+  if (oversized) return oversized;
 
   const ai = getClient();
   if (!ai) return error(503, "Psaní textu pomocí AI teď není k dispozici.");

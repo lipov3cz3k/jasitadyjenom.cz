@@ -2,6 +2,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { RateLimiter } from "./rate-limit";
+import { checkRequestSize } from "./request-size";
 
 export const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.5-flash-lite";
 export const TIMEOUT_MS = 30_000;
@@ -52,4 +53,11 @@ export function rateLimitResponse(retryAfterSeconds: number, scope: "client" | "
 
 export async function toInlineJpeg(photo: File) {
   return { inlineData: { mimeType: "image/jpeg", data: Buffer.from(await photo.arrayBuffer()).toString("base64") } };
+}
+
+/** Rejects an oversized request (or one without a length) before its body is read; `null` = fine. */
+export function rejectOversized(request: Request): Response | null {
+  const size = checkRequestSize(request.headers);
+  if (size.ok) return null;
+  return errorResponse(size.status, size.status === 413 ? "Požadavek je příliš velký." : "Chybí délka požadavku.");
 }
