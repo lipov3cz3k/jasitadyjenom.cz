@@ -9,7 +9,7 @@
     "update": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/update.ts"
   },
   "dependencies": {
-    "mapshaper": "0.7.94"
+    "mapshaper": "0.7.101"
   },
   "allowScripts": {
     "better-sqlite3": false,
