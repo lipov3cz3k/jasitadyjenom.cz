@@ -38,22 +38,14 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-surface p-5 text-sm">
-        <p className="font-medium">Co by mělo být na fotkách:</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
-          {tips.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-        <p className="mt-3 text-muted">
-          Přikládejte fotky tak, jak je pořídil telefon – neupravené a nepřeposlané. Čas pořízení je uložený přímo v
-          souboru a úřad podle něj ověří, kdy auto na místě stálo.
-        </p>
-      </div>
-
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-8 text-center transition hover:border-sign-blue">
-        <span className="font-medium text-sign-blue">{photos.length ? "Přidat další fotky" : "Vybrat fotky"}</span>
-        <span className="text-xs text-muted">Fotky zůstávají ve vašem zařízení. Odešleme je jen, když použijete předvyplnění pomocí AI.</span>
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-10 text-center transition hover:border-sign-blue">
+        <span className="text-3xl" aria-hidden>
+          📷
+        </span>
+        <span className="text-lg font-semibold text-sign-blue">
+          {photos.length ? "Přidat další fotky" : "Vyfotit nebo vybrat fotky"}
+        </span>
+        <span className="text-xs text-muted">Nejlépe 2–5 fotek přímo z galerie telefonu</span>
         <input
           type="file"
           accept="image/*"
@@ -90,6 +82,19 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
           </p>
         </>
       )}
+
+      <details className="rounded-xl border border-border bg-surface px-4 py-3 text-sm">
+        <summary className="cursor-pointer font-medium">Co by mělo být na fotkách</summary>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
+          {tips.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+        <p className="mt-2 text-muted">
+          Přikládejte fotky tak, jak je pořídil telefon – neupravené a nepřeposlané. Čas pořízení je uložený přímo v
+          souboru a úřad podle něj ověří, kdy auto na místě stálo.
+        </p>
+      </details>
 
       {withoutTime.length > 0 && (
         <Notice tone="warning">

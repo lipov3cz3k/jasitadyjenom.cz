@@ -15,23 +15,24 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
     title: "Fotky",
     body: (
       <>
-        Fotky zpracovává váš prohlížeč. Čas a polohu pořízení čte přímo z fotky ve vašem zařízení. Bez vašeho kliknutí
-        na „Předvyplnit“ se nikam neodesílají. Úřadu je posíláte sami jako přílohu zprávy ze své datové schránky.
+        Fotky zpracovává váš prohlížeč. Čas a polohu pořízení čte přímo z fotky ve vašem zařízení. Nikam se
+        neodesílají, pokud nenecháte zapnuté rozpoznání pomocí AI. Úřadu je posíláte sami jako přílohu zprávy ze své datové schránky.
       </>
     ),
   },
   {
     id: "ai",
-    title: "Předvyplnění pomocí AI (nepovinné)",
+    title: "Rozpoznání a text pomocí AI (nepovinné)",
     body: (
       <>
-        Jen když kliknete na „Předvyplnit“, pošleme nejvýš 4 fotky a váš popis situace přes náš server modelu Gemini
+        Rozpoznání můžete na první obrazovce vypnout. Když ho necháte zapnuté, pošleme po kliknutí na „Pokračovat“
+        nejvýš 4 fotky a váš popis situace přes náš server modelu Gemini
         ve službě Google Vertex AI. Fotky před odesláním zmenší váš prohlížeč, a tím z nich zmizí poloha, údaje
         o telefonu a další metadata. Zpracování probíhá v Evropské unii. Náš server fotky ani popis neukládá ani
         nezapisuje do záznamů. Google podle podmínek Vertex AI tato data nepoužívá k trénování modelů. Na fotkách
         může být registrační značka a lidé v okolí, posílejte proto jen to, co je pro podnět potřeba. Výsledek je
-        jen návrh, který před vytvořením podnětu zkontrolujete. Když necháte AI napsat text podnětu na míru, pošleme
-        stejně zmenšené fotky, váš popis situace, popis vozidla a druh přestupku. Vaše jméno, adresu, registrační
+        jen návrh, který před vytvořením podnětu zkontrolujete. Pro napsání textu podnětu na míru pak pošleme stejně
+        zmenšené fotky, váš popis situace, popis vozidla a druh přestupku. Vaše jméno, adresu, registrační
         značku ani místo přestupku přitom neposíláme – ty do textu doplní až váš prohlížeč.
       </>
     ),

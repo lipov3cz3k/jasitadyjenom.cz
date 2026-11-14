@@ -74,6 +74,8 @@ Poučení z prvního odloženého podnětu: úřad napsal, že z fotek „nevypl
   dál skládá šablona, výstup modelu s paragrafy, daty a časy se zahazuje. Vzorový příklad v promptu
   je anonymizovaný první podnět.
 - [x] Přepínač „řidič byl u vozidla“
+- [x] Zjednodušené UI ve třech krocích (fotky a popis → kontrola předvyplněných údajů → podnět),
+  AI zapnutá zaškrtávátkem, text na míru se napíše automaticky, hlavní tlačítko přilepené dole na mobilu
 - [ ] Vyhodnocení textů na reálných případech, případně silnější model (`GEMINI_DRAFT_MODEL`)
 
 ## Později

@@ -1,6 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
+// Three screens: photos (+ optional description) → review of the pre-filled data → the notice.
+// Rendered in the browser only (see ReportFlowClient): reads saved reporter details from localStorage.
+
 import { useEffect, useRef, useState } from "react";
 import {
   applyAnalysis,
@@ -12,101 +14,138 @@ import {
 import type { Analysis } from "@/lib/analysis/schema";
 import { loadAuthorityIndex, resolveAuthority, type ResolvedAuthority } from "@/lib/authority/client";
 import { reverseGeocode } from "@/lib/cuzk";
-import { formatDateTime, fromDateTimeLocal, toDateTimeLocal } from "@/lib/datetime";
+import type { DraftFacts, NoticeDraft } from "@/lib/draft/schema";
+import { clearReporter, loadReporter, saveReporter } from "@/lib/notice/reporter-storage";
+import type { Reporter } from "@/lib/notice/template";
 import { combineMetadata, readPhotoMetadata, type LatLon, type PhotoMetadata } from "@/lib/photos/metadata";
-import { evaluatePhotoAge, OLD_AFTER_DAYS } from "@/lib/photos/rules";
-import { AiAssist } from "./AiAssist";
-import { AuthorityCard } from "./AuthorityCard";
-import { Notice } from "./Notice";
-import { PhotoPicker, type PhotoItem } from "./PhotoPicker";
-import { Step } from "./Step";
+import { appendPhotos, postAi } from "./ai-request";
+import { draftKey, type DraftState } from "./DraftEditor";
+import { NoticeScreen } from "./NoticeScreen";
+import { PhotosScreen } from "./PhotosScreen";
+import type { PhotoItem } from "./PhotoPicker";
+import { ReviewScreen } from "./ReviewScreen";
 
-// Reads localStorage (saved reporter details), so browser only
-const NoticeSection = dynamic(() => import("./NoticeSection"), { ssr: false });
+export type LocationSource = "exif" | "device" | "map";
+export type TimeSource = "exif" | "file" | "manual";
 
-const LocationMap = dynamic(() => import("./LocationMap").then((m) => m.LocationMap), {
-  ssr: false,
-  loading: () => <div className="h-80 w-full animate-pulse rounded-xl border border-border bg-surface" />,
-});
-
-type LocationSource = "exif" | "device" | "map";
-type TimeSource = "exif" | "file" | "manual";
-
-interface Located {
+export interface Located {
   point: LatLon;
   source: LocationSource;
 }
 
-const locationSourceLabel: Record<LocationSource, string> = {
-  exif: "Poloha z fotky",
-  device: "Poloha z vašeho zařízení",
-  map: "Poloha vybraná na mapě",
-};
+export type AnalysisState =
+  | { kind: "off" }
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "done"; analysis: Analysis; filled: string[]; skipped: number };
 
-export function ReportFlow() {
+export type DraftRequest = { kind: "idle" | "loading" } | { kind: "error"; message: string };
+
+export interface PlaceState {
+  location: Located | null;
+  address: string;
+  addressState: "idle" | "loading" | "missing";
+  authority: ResolvedAuthority | null;
+  authorityState: "idle" | "loading" | "error";
+}
+
+export interface ReporterState {
+  reporter: Reporter;
+  anonymous: boolean;
+  remember: boolean;
+  /** Details were loaded from this browser. */
+  stored: boolean;
+}
+
+const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", email: "" };
+
+type Screen = "photos" | "review" | "notice";
+
+export default function ReportFlow() {
+  const [screen, setScreen] = useState<Screen>("photos");
+
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const metadata = useRef(new Map<string, PhotoMetadata>());
+  const photoUrls = useRef<string[]>([]);
 
-  const [location, setLocation] = useState<Located | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [useAi, setUseAi] = useState(true);
+  const [analysis, setAnalysis] = useState<AnalysisState>({ kind: "off" });
+  /** Inputs of the last successful analysis; going back and forth doesn't repeat the same request. */
+  const analyzedKey = useRef<string | null>(null);
+
+  const [place, setPlace] = useState<PlaceState>({
+    location: null,
+    address: "",
+    addressState: "idle",
+    authority: null,
+    authorityState: "idle",
+  });
+  const lookup = useRef<AbortController | null>(null);
 
   const [takenAt, setTakenAt] = useState<Date | null>(null);
   const [timeSource, setTimeSource] = useState<TimeSource | null>(null);
 
-  const [address, setAddress] = useState("");
-  const [addressState, setAddressState] = useState<"idle" | "loading" | "missing">("idle");
-
-  const [authority, setAuthority] = useState<ResolvedAuthority | null>(null);
-  const [authorityState, setAuthorityState] = useState<"idle" | "loading" | "error">("idle");
-
-  const [description, setDescription] = useState("");
   const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
   const [suggested, setSuggested] = useState<ReadonlySet<VehicleField>>(new Set());
+  const [driverPresent, setDriverPresent] = useState(false);
 
-  const lookup = useRef<AbortController | null>(null);
-  const photoUrls = useRef<string[]>([]);
+  const [reporterState, setReporterState] = useState<ReporterState>(() => {
+    const stored = loadReporter();
+    return { reporter: stored ?? emptyReporter, anonymous: false, remember: stored !== null, stored: stored !== null };
+  });
+
+  const [draft, setDraft] = useState<DraftState | null>(null);
+  const [draftRequest, setDraftRequest] = useState<DraftRequest>({ kind: "idle" });
+  const aiRequest = useRef<AbortController | null>(null);
+  const draftAbort = useRef<AbortController | null>(null);
+
+  // AI answers take seconds; they must merge into the form as it is then, not as it was on click
+  const latest = useRef({ vehicleForm, suggested });
+  useEffect(() => {
+    latest.current = { vehicleForm, suggested };
+  });
 
   useEffect(() => {
     const urls = photoUrls.current;
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, []);
 
-  function updateLocation(point: LatLon, source: LocationSource) {
-    setLocation({ point, source });
-    setLocationError(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [screen]);
 
+  function updateLocation(point: LatLon, source: LocationSource) {
     lookup.current?.abort();
     const controller = new AbortController();
     lookup.current = controller;
     const { signal } = controller;
 
     // The old address would be misleading for a new place – clear it until the new one arrives
-    setAddress("");
-    setAddressState("loading");
+    setPlace((p) => ({
+      ...p,
+      location: { point, source },
+      address: "",
+      addressState: "loading",
+      authority: null,
+      authorityState: "loading",
+    }));
+
     reverseGeocode(point, signal)
       .then((found) => {
-        if (signal.aborted) return;
-        setAddress(found ?? "");
-        setAddressState(found ? "idle" : "missing");
+        if (!signal.aborted) setPlace((p) => ({ ...p, address: found ?? "", addressState: found ? "idle" : "missing" }));
       })
       .catch(() => {
-        if (signal.aborted) return;
-        setAddress("");
-        setAddressState("missing");
+        if (!signal.aborted) setPlace((p) => ({ ...p, address: "", addressState: "missing" }));
       });
 
-    setAuthority(null);
-    setAuthorityState("loading");
     loadAuthorityIndex()
       .then((index) => resolveAuthority(index, point, signal))
       .then((result) => {
-        if (signal.aborted) return;
-        setAuthority(result);
-        setAuthorityState("idle");
+        if (!signal.aborted) setPlace((p) => ({ ...p, authority: result, authorityState: "idle" }));
       })
       .catch(() => {
-        if (!signal.aborted) setAuthorityState("error");
+        if (!signal.aborted) setPlace((p) => ({ ...p, authorityState: "error" }));
       });
   }
 
@@ -123,10 +162,10 @@ export function ReportFlow() {
     // Only an EXIF time can be checked by the authority; the file time changes on copying
     const exifTimes = new Map(items.map((item, n) => [item.id, read[n].takenAtSource === "exif" ? read[n].takenAt : null]));
     setPhotos((prev) => prev.map((p) => (exifTimes.has(p.id) ? { ...p, takenAt: exifTimes.get(p.id) } : p)));
-    const combined = combineMetadata([...metadata.current.values()]);
 
+    const combined = combineMetadata([...metadata.current.values()]);
     // A photo never overrides the user's manual choice
-    if (combined.gps && (!location || location.source === "exif")) updateLocation(combined.gps, "exif");
+    if (combined.gps && (!place.location || place.location.source === "exif")) updateLocation(combined.gps, "exif");
     if (combined.takenAt && timeSource !== "manual") {
       setTakenAt(combined.takenAt);
       setTimeSource(combined.takenAtSource);
@@ -149,144 +188,170 @@ export function ReportFlow() {
     });
   }
 
-  function applySuggestion(analysis: Analysis): string[] {
-    const applied = applyAnalysis(vehicleForm, suggested, analysis);
-    setVehicleForm(applied.form);
-    setSuggested(applied.suggested);
-    return applied.changed.map((f) => vehicleFieldLabels[f]);
-  }
+  const analysisKey = () => JSON.stringify([description.trim(), photos.map((p) => p.id)]);
 
-  function useDeviceLocation() {
-    if (!("geolocation" in navigator)) {
-      setLocationError("Tento prohlížeč neumí zjistit polohu. Vyberte místo na mapě.");
+  async function analyze() {
+    const key = analysisKey();
+    aiRequest.current?.abort();
+    const controller = new AbortController();
+    aiRequest.current = controller;
+    setAnalysis({ kind: "loading" });
+
+    const form = new FormData();
+    form.set("description", description.trim());
+    const sent = await appendPhotos(form, photos);
+    if (sent.length === 0 && !description.trim()) {
+      setAnalysis({
+        kind: "error",
+        message: "Fotky se nepodařilo zpracovat (např. formát HEIC). Vyplňte prosím údaje ručně.",
+      });
       return;
     }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false);
-        updateLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }, "device");
-      },
-      (err) => {
-        setLocating(false);
-        setLocationError(
-          err.code === err.PERMISSION_DENIED
-            ? "Přístup k poloze je zakázaný. Povolte ho v prohlížeči, nebo vyberte místo na mapě."
-            : "Polohu se nepodařilo zjistit. Vyberte místo na mapě.",
-        );
-      },
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
+
+    const result = await postAi<Analysis>(
+      "/api/analyze",
+      form,
+      controller.signal,
+      "Rozpoznání se nepovedlo. Vyplňte prosím údaje ručně.",
+    );
+    if ("aborted" in result) return;
+    if (!result.ok) {
+      setAnalysis({ kind: "error", message: result.message });
+      return;
+    }
+
+    const applied = applyAnalysis(latest.current.vehicleForm, latest.current.suggested, result.data);
+    setVehicleForm(applied.form);
+    setSuggested(applied.suggested);
+    if (result.data.placeHint && !place.location) {
+      // Without a location the address field is empty; the place read from the photos is a good start
+      setPlace((p) => (p.address.trim() ? p : { ...p, address: result.data.placeHint! }));
+    }
+    analyzedKey.current = key;
+    setAnalysis({
+      kind: "done",
+      analysis: result.data,
+      filled: applied.changed.map((f) => vehicleFieldLabels[f]),
+      skipped: photos.length - sent.length,
+    });
+  }
+
+  function draftFacts(): DraftFacts | null {
+    const { offense, vehicle, details } = vehicleForm;
+    if (!offense) return null;
+    return { offense, vehicle: vehicle.trim(), details: details.trim(), description: description.trim() };
+  }
+
+  async function writeDraft() {
+    const facts = draftFacts();
+    if (!facts) return;
+    draftAbort.current?.abort();
+    const controller = new AbortController();
+    draftAbort.current = controller;
+    setDraftRequest({ kind: "loading" });
+
+    const form = new FormData();
+    form.set("facts", JSON.stringify(facts));
+    const sent = await appendPhotos(form, photos);
+    const result = await postAi<NoticeDraft>(
+      "/api/draft",
+      form,
+      controller.signal,
+      "Text na míru se nepodařilo napsat, použili jsme základní text.",
+    );
+    if ("aborted" in result) return;
+    if (!result.ok) {
+      setDraftRequest({ kind: "error", message: result.message });
+      return;
+    }
+    const { data } = result;
+    setDraft({
+      key: draftKey(facts, photos),
+      facts: data.facts,
+      harm: data.harm.map((h) => `${h.title}: ${h.text}`).join("\n"),
+      captions: Object.fromEntries(
+        data.captions.flatMap((c) => (sent[c.photo - 1] ? [[sent[c.photo - 1].id, c.caption]] : [])),
+      ),
+      warnings: data.warnings,
+    });
+    setDraftRequest({ kind: "idle" });
+  }
+
+  function continueToReview() {
+    if (!useAi) setAnalysis({ kind: "off" });
+    else if (analysis.kind !== "done" || analyzedKey.current !== analysisKey()) void analyze();
+    setScreen("review");
+  }
+
+  function continueToNotice() {
+    const { reporter, anonymous, remember } = reporterState;
+    if (!anonymous) {
+      if (remember) saveReporter(reporter);
+      else clearReporter();
+    }
+    const facts = draftFacts();
+    // Write a fresh text when the AI is on and the current one was written from different inputs
+    if (useAi && facts && draft?.key !== draftKey(facts, photos)) void writeDraft();
+    setScreen("notice");
+  }
+
+  if (screen === "photos") {
+    return (
+      <PhotosScreen
+        photos={photos}
+        onAdd={addPhotos}
+        onRemove={removePhoto}
+        description={description}
+        onDescriptionChange={setDescription}
+        useAi={useAi}
+        onUseAiChange={setUseAi}
+        onContinue={continueToReview}
+      />
     );
   }
 
-  const age = takenAt ? evaluatePhotoAge(takenAt) : null;
-
-  return (
-    <div className="space-y-12">
-      <Step number={1} title="Fotky">
-        <div className="space-y-6">
-          <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
-          <AiAssist
-            photos={photos}
-            description={description}
-            onDescriptionChange={setDescription}
-            onResult={applySuggestion} onUsePlace={setAddress} />
-        </div>
-      </Step>
-
-      <Step number={2} title="Místo a čas">
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={useDeviceLocation}
-              disabled={locating}
-              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition hover:border-sign-blue disabled:opacity-60"
-            >
-              {locating ? "Zjišťuji polohu…" : "Použít moji polohu"}
-            </button>
-            <span className="text-sm text-muted">
-              {location
-                ? `${locationSourceLabel[location.source]} (${location.point.lat.toFixed(5)}, ${location.point.lon.toFixed(5)})`
-                : photos.length
-                  ? "Fotka polohu neobsahuje – stojíte-li na místě, použijte svou polohu, jinak klikněte do mapy."
-                  : "Polohu vezmeme z fotky, případně ji vyberte na mapě."}
-            </span>
-          </div>
-          {locationError && <Notice tone="warning">{locationError}</Notice>}
-
-          <LocationMap point={location?.point ?? null} onPick={(p) => updateLocation(p, "map")} />
-
-          <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
-            <label className="block text-sm">
-              <span className="font-medium">Adresa místa</span>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder={addressState === "loading" ? "Hledám adresu…" : "např. Vinohradská 12, Praha 2"}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2"
-              />
-              {addressState === "missing" && (
-                <span className="mt-1 block text-xs text-muted">
-                  V okolí jsme nenašli adresu. Popište místo vlastními slovy (ulice, u čísla domu, křižovatka…).
-                </span>
-              )}
-            </label>
-            <label className="block text-sm">
-              <span className="font-medium">Datum a čas</span>
-              <input
-                type="datetime-local"
-                value={takenAt ? toDateTimeLocal(takenAt) : ""}
-                onChange={(e) => {
-                  setTakenAt(fromDateTimeLocal(e.target.value));
-                  setTimeSource("manual");
-                }}
-                className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2"
-              />
-              {timeSource === "file" && (
-                <span className="mt-1 block text-xs text-muted">Čas podle souboru – zkontrolujte, že odpovídá.</span>
-              )}
-            </label>
-          </div>
-
-          {age === "old" && takenAt && (
-            <Notice tone="warning">
-              Fotka je z {formatDateTime(takenAt)}, tedy starší než {OLD_AFTER_DAYS} dní. Úřad musí jednat bez
-              zbytečného odkladu, se starším podnětem už nemusí nic udělat.
-            </Notice>
-          )}
-          {age === "expired" && (
-            <Notice tone="error">Přestupek starší než rok je promlčený, podnět už nemá smysl podávat.</Notice>
-          )}
-          {age === "future" && <Notice tone="warning">Datum je v budoucnosti – opravte ho prosím.</Notice>}
-        </div>
-      </Step>
-
-      <Step number={3} title="Příslušný úřad">
-        {!location && <p className="text-sm text-muted">Úřad určíme podle místa.</p>}
-        {location && authorityState === "loading" && <p className="text-sm text-muted">Hledám příslušný úřad…</p>}
-        {location && authorityState === "error" && (
-          <Notice tone="error">Nepodařilo se načíst seznam úřadů. Zkontrolujte připojení a zkuste to znovu.</Notice>
-        )}
-        {location && authorityState === "idle" && authority && <AuthorityCard result={authority} />}
-      </Step>
-
-      <NoticeSection
-        step={4}
+  if (screen === "review") {
+    return (
+      <ReviewScreen
+        photos={photos}
+        analysis={analysis}
+        onRetryAnalysis={analyze}
+        place={place}
+        onPick={updateLocation}
+        onAddressChange={(address) => setPlace((p) => ({ ...p, address }))}
+        takenAt={takenAt}
+        timeSource={timeSource}
+        onTakenAtChange={(date) => {
+          setTakenAt(date);
+          setTimeSource("manual");
+        }}
         form={vehicleForm}
         suggested={suggested}
         onChange={changeVehicleField}
-        context={{
-          authority: authority?.match?.authority ?? null,
-          point: location?.point ?? null,
-          address,
-          takenAt,
-          timeInvalid: age === "expired" || age === "future",
-          photos,
-          description,
-        }}
+        driverPresent={driverPresent}
+        onDriverPresentChange={setDriverPresent}
+        reporterState={reporterState}
+        onReporterStateChange={setReporterState}
+        onBack={() => setScreen("photos")}
+        onContinue={continueToNotice}
       />
-    </div>
+    );
+  }
+
+  return (
+    <NoticeScreen
+      photos={photos}
+      place={place}
+      takenAt={takenAt}
+      form={vehicleForm}
+      driverPresent={driverPresent}
+      reporterState={reporterState}
+      draft={draft}
+      onDraftChange={setDraft}
+      draftRequest={draftRequest}
+      currentDraftKey={draftFacts() ? draftKey(draftFacts()!, photos) : null}
+      onWriteDraft={writeDraft}
+      onBack={() => setScreen("review")}
+    />
   );
 }

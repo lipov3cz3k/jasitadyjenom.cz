@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { ReportFlow } from "@/components/report/ReportFlow";
+import { ReportFlowClient } from "@/components/report/ReportFlowClient";
 
 export const metadata: Metadata = {
   title: "Nahlásit špatné parkování – jasitadyjenom.cz",
@@ -13,17 +13,16 @@ export default function ReportPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-5 sm:px-8">
       <SiteHeader badge="Beta" />
-      <main className="flex-1 pb-16 pt-6">
-        <h1 className="text-3xl font-bold tracking-tight">Nahlásit špatně zaparkované auto</h1>
-        <p className="mt-3 text-muted">
-          Fotky a vaše údaje zpracovává jen váš prohlížeč. Souřadnice posíláme jen Českému úřadu zeměměřickému
-          a katastrálnímu kvůli adrese a příslušnému úřadu, mapu načítáme z OpenFreeMap.{" "}
+      <main className="flex-1 pb-10 pt-4 sm:pt-6">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Nahlásit špatně zaparkované auto</h1>
+        <p className="mt-2 text-sm text-muted">
+          Vaše údaje zůstávají v prohlížeči. Fotky odešleme jen k rozpoznání pomocí AI, pokud ho necháte zapnuté.{" "}
           <Link href="/soukromi" className="underline underline-offset-4">
-            Podrobnosti
+            Jak s daty zacházíme
           </Link>
         </p>
-        <div className="mt-10">
-          <ReportFlow />
+        <div className="mt-6">
+          <ReportFlowClient />
         </div>
       </main>
       <SiteFooter />
