@@ -68,10 +68,11 @@ function findEditor(...values: (string | undefined)[]): string | null {
 
 function xmpField(raw: string | undefined, name: string): string | undefined {
   if (!raw) return undefined;
-  // Either an attribute (name="…") or an element (<name>…</name>, possibly wrapped in rdf:Alt/li)
-  const re = new RegExp(`${name}\\s*=\\s*"([^"]*)"|<${name}[^>]*>([\\s\\S]*?)</${name}>`, "i");
+  // Either an attribute (name="…") or the first text inside the element (<name>…</name>, possibly
+  // wrapped in rdf:Alt/li). The value is only matched against patterns, never rendered.
+  const re = new RegExp(`${name}\\s*=\\s*"([^"]*)"|<${name}[^>]*>\\s*(?:<[^>]*>\\s*)*([^<]+)`, "i");
   const m = raw.match(re);
-  return (m?.[1] ?? m?.[2]?.replace(/<[^>]*>/g, ""))?.trim() || undefined;
+  return (m?.[1] ?? m?.[2])?.trim() || undefined;
 }
 
 /** Returns the strongest hint that the photo was edited, or `null` when it looks like a camera original. */

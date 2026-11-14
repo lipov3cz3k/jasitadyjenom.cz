@@ -33,6 +33,11 @@ describe("detectEditing", () => {
       kind: "editor",
       tool: "PicsArt",
     });
+    expect(
+      detectEditing({
+        xmpRaw: '<xmp:CreatorTool>\n  <rdf:Alt><rdf:li xml:lang="x-default">GIMP 2.10</rdf:li></rdf:Alt>\n</xmp:CreatorTool>',
+      }),
+    ).toEqual({ kind: "editor", tool: "GIMP" });
   });
 
   it("AI edit from IPTC DigitalSourceType wins over other signals", () => {
