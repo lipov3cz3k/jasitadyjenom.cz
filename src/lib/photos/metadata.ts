@@ -1,3 +1,5 @@
+import { detectEditing, type EditHint } from "./editing";
+
 export interface LatLon {
   lat: number;
   lon: number;
@@ -9,6 +11,12 @@ export interface PhotoMetadata {
   gps: LatLon | null;
   takenAt: Date | null;
   takenAtSource: TakenAtSource | null;
+}
+
+/** What `readPhotoMetadata` returns for a single photo. */
+export interface PhotoInfo extends PhotoMetadata {
+  /** Hint that the photo is not the camera original; `null` when nothing suggests editing. */
+  edit: EditHint | null;
 }
 
 /**
@@ -48,9 +56,10 @@ export function isValidGps(lat: unknown, lon: unknown): lat is number {
  * Android (Chrome) and some iOS versions strip the location when picking a file –
  * so `gps: null` is a normal state, not an error.
  */
-export async function readPhotoMetadata(file: File): Promise<PhotoMetadata> {
+export async function readPhotoMetadata(file: File): Promise<PhotoInfo> {
   let gps: LatLon | null = null;
   let exifDate: Date | null = null;
+  let edit: EditHint | null = null;
 
   try {
     const ExifReader = await import("exifreader");
@@ -62,13 +71,21 @@ export async function readPhotoMetadata(file: File): Promise<PhotoMetadata> {
       tags.exif?.DateTimeOriginal?.description,
       tags.exif?.OffsetTimeOriginal?.description,
     );
+    edit = detectEditing({
+      software: tags.exif?.Software?.description,
+      creatorTool: tags.xmp?.CreatorTool?.description,
+      digitalSourceType: tags.xmp?.DigitalSourceType?.description,
+      xmpRaw: tags.xmp?._raw,
+      modifiedAt: parseExifDateTime(tags.exif?.DateTime?.description, tags.exif?.OffsetTime?.description),
+      takenAt: exifDate,
+    });
   } catch {
     // format without EXIF or a corrupted file – continue without metadata
   }
 
-  if (exifDate) return { gps, takenAt: exifDate, takenAtSource: "exif" };
-  if (file.lastModified) return { gps, takenAt: new Date(file.lastModified), takenAtSource: "file" };
-  return { gps, takenAt: null, takenAtSource: null };
+  if (exifDate) return { gps, takenAt: exifDate, takenAtSource: "exif", edit };
+  if (file.lastModified) return { gps, takenAt: new Date(file.lastModified), takenAtSource: "file", edit };
+  return { gps, takenAt: null, takenAtSource: null, edit };
 }
 
 /**

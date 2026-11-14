@@ -83,6 +83,7 @@ describe("readPhotoMetadata", () => {
     expect(meta.gps?.lon).toBeCloseTo(14.4213, 5);
     expect(meta.takenAtSource).toBe("exif");
     expect(meta.takenAt?.toISOString()).toBe("2026-11-03T13:30:00.000Z");
+    expect(meta.edit).toBeNull();
   });
 
   it("without EXIF uses the file time and returns no location", async () => {
@@ -92,6 +93,7 @@ describe("readPhotoMetadata", () => {
       gps: null,
       takenAt: new Date(lastModified),
       takenAtSource: "file",
+      edit: null,
     });
   });
 });
