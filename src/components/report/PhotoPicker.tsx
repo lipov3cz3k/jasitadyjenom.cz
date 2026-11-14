@@ -8,6 +8,7 @@ import {
   MAX_MESSAGE_BYTES,
   MIN_PARKING_SPAN_MINUTES,
 } from "@/lib/photos/rules";
+import { describeEditHint, type EditHint } from "@/lib/photos/editing";
 import { Notice } from "./Notice";
 
 export interface PhotoItem {
@@ -16,6 +17,8 @@ export interface PhotoItem {
   url: string;
   /** Capture time from EXIF; `undefined` while reading, `null` when the file has none. */
   takenAt?: Date | null;
+  /** Hint that the photo was edited; `undefined` while reading, `null` when it looks original. */
+  edit?: EditHint | null;
 }
 
 interface Props {
@@ -35,6 +38,7 @@ const tips = [
 export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
   const { totalBytes, tooLarge, tooMany } = checkAttachments(photos.map((p) => p.file.size));
   const withoutTime = photos.filter((p) => p.takenAt === null);
+  const edited = photos.filter((p): p is PhotoItem & { edit: EditHint } => !!p.edit);
 
   return (
     <div className="space-y-4">
@@ -102,6 +106,21 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
           {withoutTime.length === 1 ? "nemá" : "nemají"} v sobě uložený čas pořízení, takže ho úřad nebude mít čím ověřit.
           Bývá to u fotek přeposlaných přes WhatsApp nebo Messenger, upravených nebo snímků obrazovky. Pokud můžete,
           přiložte originál přímo z galerie telefonu.
+        </Notice>
+      )}
+      {edited.length > 0 && (
+        <Notice tone="warning">
+          {edited.length === 1 ? "Fotka nejspíš není originál z fotoaparátu" : "Fotky nejspíš nejsou originály z fotoaparátu"}
+          :{" "}
+          {edited.map((p, i) => (
+            <span key={p.id}>
+              {i > 0 && "; "}
+              {p.file.name} {describeEditHint(p.edit)}
+            </span>
+          ))}
+          . Provozovatel vozidla by mohl namítnout, že s {edited.length === 1 ? "ní" : "nimi"} někdo manipuloval.
+          Pokud můžete, přiložte místo {edited.length === 1 ? "ní neupravený originál" : "nich neupravené originály"}{" "}
+          přímo z galerie telefonu.
         </Notice>
       )}
       {tooLarge && (

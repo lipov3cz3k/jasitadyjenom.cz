@@ -160,8 +160,13 @@ export default function ReportFlow() {
     const read = await Promise.all(items.map((i) => readPhotoMetadata(i.file)));
     items.forEach((item, n) => metadata.current.set(item.id, read[n]));
     // Only an EXIF time can be checked by the authority; the file time changes on copying
-    const exifTimes = new Map(items.map((item, n) => [item.id, read[n].takenAtSource === "exif" ? read[n].takenAt : null]));
-    setPhotos((prev) => prev.map((p) => (exifTimes.has(p.id) ? { ...p, takenAt: exifTimes.get(p.id) } : p)));
+    const results = new Map(
+      items.map((item, n) => [
+        item.id,
+        { takenAt: read[n].takenAtSource === "exif" ? read[n].takenAt : null, edit: read[n].edit },
+      ]),
+    );
+    setPhotos((prev) => prev.map((p) => (results.has(p.id) ? { ...p, ...results.get(p.id) } : p)));
 
     const combined = combineMetadata([...metadata.current.values()]);
     // A photo never overrides the user's manual choice
