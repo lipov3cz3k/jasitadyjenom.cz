@@ -57,7 +57,7 @@ export default function Home() {
             podnět pro příslušný úřad, který odešlete svou datovou schránkou.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
+            <Link prefetch={false}
               href="/nahlasit"
               className="inline-flex items-center rounded-lg bg-sign-blue px-5 py-3 font-medium text-white transition hover:opacity-90"
             >

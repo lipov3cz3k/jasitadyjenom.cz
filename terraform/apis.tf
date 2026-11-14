@@ -5,6 +5,8 @@ resource "google_project_service" "this" {
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
+    "logging.googleapis.com",
+    "monitoring.googleapis.com",
     "run.googleapis.com",
     "sts.googleapis.com",
   ])

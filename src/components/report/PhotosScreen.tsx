@@ -52,7 +52,7 @@ export function PhotosScreen(props: Props) {
               Vyčte značku, vůz a druh přestupku a napíše podnět na míru. Pošleme nejvýš {MAX_PHOTOS} fotky (zmenšené,
               bez polohy a metadat) a váš popis modelu Gemini, zpracování probíhá v EU. Vaše jméno, adresu ani místo
               neposíláme.{" "}
-              <Link href="/soukromi#ai" className="underline">
+              <Link prefetch={false} href="/soukromi#ai" className="underline">
                 Podrobnosti
               </Link>
             </span>

@@ -17,7 +17,7 @@ export default function ReportPage() {
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Nahlásit špatně zaparkované auto</h1>
         <p className="mt-2 text-sm text-muted">
           Vaše údaje zůstávají v prohlížeči. Fotky odešleme jen k rozpoznání pomocí AI, pokud ho necháte zapnuté.{" "}
-          <Link href="/soukromi" className="underline underline-offset-4">
+          <Link prefetch={false} href="/soukromi" className="underline underline-offset-4">
             Jak s daty zacházíme
           </Link>
         </p>

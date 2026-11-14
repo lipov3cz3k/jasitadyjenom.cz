@@ -78,6 +78,12 @@ Poučení z prvního odloženého podnětu: úřad napsal, že z fotek „nevypl
   AI zapnutá zaškrtávátkem, text na míru se napíše automaticky, hlavní tlačítko přilepené dole na mobilu
 - [ ] Vyhodnocení textů na reálných případech, případně silnější model (`GEMINI_DRAFT_MODEL`)
 
+## Přehled používání
+
+- [x] Log-based metriky z logů Cloud Runu (návštěvy stránek, volání AI, chyby, doba odpovědi) a dashboard,
+  bez skriptů v prohlížeči a bez cookies
+- [ ] Grafana Cloud nad Cloud Monitoringem (jen čtení), pokud bude potřeba hezčí nebo sdílený přehled
+
 ## Později
 
 - Mapy.com jako zdroj map a geokódování

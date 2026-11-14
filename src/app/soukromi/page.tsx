@@ -73,7 +73,9 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
       <>
         Web běží na Google Cloud Run v Evropské unii (Belgie). Jako u každého webu vznikají technické záznamy
         o požadavcích (IP adresa, adresa stránky, typ prohlížeče). Uchovávají se 30 dní a používáme je jen
-        k zajištění provozu a bezpečnosti. Abychom omezili počet použití AI, server si počítá požadavky podle IP
+        k zajištění provozu a bezpečnosti a k souhrnné statistice: kolikrát za den se otevřely jednotlivé stránky
+        a kolikrát se použila AI. Statistika obsahuje jen tyto počty, žádné IP adresy ani údaje o prohlížeči,
+        a nikoho v ní nesledujeme. Abychom omezili počet použití AI, server si počítá požadavky podle IP
         adresy, ale jen v operační paměti a nic z toho neukládá.
       </>
     ),
@@ -82,7 +84,7 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
     title: "Cookies a analytika",
     body: (
       <>
-        Nepoužíváme žádné cookies, analytické nástroje ani reklamu. Pokud ručně zvolíte světlý nebo tmavý vzhled,
+        Nepoužíváme žádné cookies, analytické skripty ani reklamu. V prohlížeči neběží nic, co by vás sledovalo. Pokud ručně zvolíte světlý nebo tmavý vzhled,
         zapamatuje si ho jen váš prohlížeč (localStorage).
       </>
     ),
@@ -119,7 +121,7 @@ export default function PrivacyPage() {
           ))}
         </div>
         <p className="mt-12">
-          <Link href="/nahlasit" className="font-medium text-sign-blue underline">
+          <Link prefetch={false} href="/nahlasit" className="font-medium text-sign-blue underline">
             Nahlásit auto →
           </Link>
         </p>
