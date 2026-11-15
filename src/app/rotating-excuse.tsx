@@ -23,13 +23,53 @@ export function RotatingExcuse() {
   // step counts rotations; it keys the animated spans so the animation restarts.
   const [step, setStep] = useState(0);
   const paused = useRef(false);
+  const ref = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const interval = setInterval(() => {
-      if (!paused.current) setStep((s) => s + 1);
-    }, SHOW_MS);
-    return () => clearInterval(interval);
+    const el = ref.current;
+    if (!el) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return;
+
+    let inView = true;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      if (interval || !inView || reducedMotion.matches) return;
+      interval = setInterval(() => {
+        if (!paused.current) setStep((s) => s + 1);
+      }, SHOW_MS);
+    };
+
+    const stop = () => {
+      if (!interval) return;
+      clearInterval(interval);
+      interval = null;
+    };
+
+    const observer =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(([entry]) => {
+            inView = entry.isIntersecting;
+            if (inView) start();
+            else stop();
+          })
+        : null;
+
+    observer?.observe(el);
+    start();
+
+    const onMotionChange = () => {
+      if (reducedMotion.matches) stop();
+      else start();
+    };
+    reducedMotion.addEventListener("change", onMotionChange);
+
+    return () => {
+      stop();
+      observer?.disconnect();
+      reducedMotion.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   const current = EXCUSES[step % EXCUSES.length];
@@ -37,6 +77,7 @@ export function RotatingExcuse() {
 
   return (
     <p
+      ref={ref}
       className="min-h-14 text-lg italic text-muted sm:min-h-0"
       onPointerEnter={() => (paused.current = true)}
       onPointerLeave={() => (paused.current = false)}
