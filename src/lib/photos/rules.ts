@@ -54,3 +54,10 @@ export function photoSpanMinutes(times: Date[]): number | null {
   const ms = times.map((t) => t.getTime());
   return (Math.max(...ms) - Math.min(...ms)) / 60_000;
 }
+
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?)$/i;
+
+/** Accepts `image/*` MIME types and known photo extensions (browsers often leave `type` empty for HEIC). */
+export function isImageFile(file: Pick<File, "name" | "type">): boolean {
+  return file.type.startsWith("image/") || IMAGE_EXTENSIONS.test(file.name);
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   checkAttachments,
   formatBytes,
+  isImageFile,
   MAX_ATTACHMENTS,
   MAX_MESSAGE_BYTES,
   MIN_PARKING_SPAN_MINUTES,
@@ -36,13 +37,37 @@ const tips = [
 ];
 
 export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
+  const [dragging, setDragging] = useState(false);
   const { totalBytes, tooLarge, tooMany } = checkAttachments(photos.map((p) => p.file.size));
   const withoutTime = photos.filter((p) => p.takenAt === null);
   const edited = photos.filter((p): p is PhotoItem & { edit: EditHint } => !!p.edit);
 
   return (
     <div className="space-y-4">
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface px-6 py-10 text-center transition hover:border-sign-blue">
+      <label
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+            setDragging(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const files = Array.from(e.dataTransfer.files).filter(isImageFile);
+          if (files.length) onAdd(files);
+        }}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition ${
+          dragging ? "border-sign-blue bg-sign-blue/10" : "border-border bg-surface hover:border-sign-blue"
+        }`}
+      >
         <span className="text-3xl" aria-hidden>
           📷
         </span>
