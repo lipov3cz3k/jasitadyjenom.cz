@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { checkAttachments, evaluatePhotoAge, formatBytes, MAX_MESSAGE_BYTES, photoSpanMinutes } from "./rules";
+import {
+  checkAttachments,
+  evaluatePhotoAge,
+  formatBytes,
+  isImageFile,
+  MAX_MESSAGE_BYTES,
+  photoSpanMinutes,
+} from "./rules";
 
 describe("evaluatePhotoAge", () => {
   const now = new Date("2026-11-05T12:00:00Z");
@@ -53,5 +60,14 @@ describe("photoSpanMinutes", () => {
 
   it("ignores order", () => {
     expect(photoSpanMinutes([at("09:24:23"), at("09:21:43"), at("09:23:56")])).toBeCloseTo(2 + 40 / 60);
+  });
+});
+
+describe("isImageFile", () => {
+  it("accepts image MIME types and HEIC without MIME type", () => {
+    expect(isImageFile({ name: "photo.jpg", type: "image/jpeg" })).toBe(true);
+    expect(isImageFile({ name: "IMG_1234.HEIC", type: "" })).toBe(true);
+    expect(isImageFile({ name: "notes.pdf", type: "application/pdf" })).toBe(false);
+    expect(isImageFile({ name: "readme.txt", type: "text/plain" })).toBe(false);
   });
 });
