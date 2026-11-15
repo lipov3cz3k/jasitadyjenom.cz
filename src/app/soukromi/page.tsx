@@ -105,9 +105,9 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-5 sm:px-8">
+    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 sm:px-8">
       <SiteHeader />
-      <main className="flex-1 pb-16 pt-6">
+      <main className="mx-auto w-full max-w-3xl flex-1 pb-16 pt-6">
         <h1 className="text-3xl font-bold tracking-tight">Ochrana soukromí</h1>
         <p className="mt-3 text-muted">
           Aplikace je postavená tak, aby o vás věděla co nejméně. Tady je přesně, co se s čím děje.

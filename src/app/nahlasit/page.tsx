@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 export default function ReportPage() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-5 sm:px-8">
+    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-5 sm:px-8">
       <SiteHeader badge="Beta" />
-      <main className="flex-1 pb-10 pt-4 sm:pt-6">
+      <main className="mx-auto w-full max-w-3xl flex-1 pb-10 pt-4 sm:pt-6">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Nahlásit špatně zaparkované auto</h1>
         <p className="mt-2 text-sm text-muted">
           Vaše údaje zůstávají v prohlížeči. Fotky odešleme jen k rozpoznání pomocí AI, pokud ho necháte zapnuté.{" "}
