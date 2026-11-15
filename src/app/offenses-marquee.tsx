@@ -11,8 +11,8 @@ const RESUME_AFTER_MS = 3000;
 function OffenseCard({ offense, hidden }: { offense: Offense; hidden?: boolean }) {
   return (
     <li className="flex w-80 shrink-0 flex-col rounded-xl border border-border bg-surface p-5 sm:w-96">
-      <h3 className="font-semibold">{offense.title}</h3>
-      <blockquote className="mt-3 flex-1 border-l-4 border-line-yellow pl-3 text-sm leading-relaxed text-muted">
+      <h3 className="font-semibold text-balance">{offense.title}</h3>
+      <blockquote className="mt-3 flex-1 border-l-4 border-line-yellow pl-3 text-sm leading-relaxed text-muted text-pretty">
         „{offense.quote}“
       </blockquote>
       <a
@@ -30,8 +30,8 @@ function OffenseCard({ offense, hidden }: { offense: Offense; hidden?: boolean }
 
 // A natively scrollable row that auto-advances. The list is rendered twice and the
 // scroll position wraps by one list width, so it loops seamlessly in both directions.
-// Auto-scroll pauses on hover/focus and after any manual scroll (touch, trackpad,
-// arrow buttons); with prefers-reduced-motion it never moves on its own.
+// Auto-scroll pauses on hover/focus, when scrolled off-screen, and after any manual
+// scroll (touch, trackpad, arrow buttons); with prefers-reduced-motion it never moves.
 export function OffensesMarquee() {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -64,12 +64,17 @@ export function OffensesMarquee() {
     if (!el || !list) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let inView = true;
     let pos = el.scrollLeft;
     let lastSet = pos;
     let lastTime = performance.now();
     let frame = 0;
 
     const tick = (now: number) => {
+      if (!inView || reducedMotion.matches) {
+        frame = 0;
+        return;
+      }
       const dt = Math.min(now - lastTime, 100) / 1000;
       lastTime = now;
       const loop = list.offsetWidth;
@@ -77,7 +82,7 @@ export function OffensesMarquee() {
       // The user (or a smooth scroll) moved it: continue from there.
       if (Math.abs(el.scrollLeft - lastSet) > 1) pos = el.scrollLeft;
 
-      const paused = hovered.current || focused.current || now < holdUntil.current || reducedMotion.matches;
+      const paused = hovered.current || focused.current || now < holdUntil.current;
       if (!paused && loop > 0) {
         pos += (loop / LOOP_SECONDS) * dt;
         if (pos >= loop) pos -= loop;
@@ -86,8 +91,44 @@ export function OffensesMarquee() {
       lastSet = el.scrollLeft;
       frame = requestAnimationFrame(tick);
     };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+
+    const start = () => {
+      if (frame || !inView || reducedMotion.matches) return;
+      pos = el.scrollLeft;
+      lastSet = pos;
+      lastTime = performance.now();
+      frame = requestAnimationFrame(tick);
+    };
+
+    const stop = () => {
+      if (!frame) return;
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    const observer =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(([entry]) => {
+            inView = entry.isIntersecting;
+            if (inView) start();
+            else stop();
+          })
+        : null;
+
+    observer?.observe(el);
+    start();
+
+    const onMotionChange = () => {
+      if (reducedMotion.matches) stop();
+      else start();
+    };
+    reducedMotion.addEventListener("change", onMotionChange);
+
+    return () => {
+      stop();
+      observer?.disconnect();
+      reducedMotion.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   const step = (direction: 1 | -1) => {

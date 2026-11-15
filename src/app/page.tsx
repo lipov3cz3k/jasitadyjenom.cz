@@ -4,8 +4,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { OffensesMarquee } from "./offenses-marquee";
 import { RotatingExcuse } from "./rotating-excuse";
 
-const GITHUB_URL = "https://github.com/lipov3cz3k/jasitadyjenom.cz";
-
 const steps = [
   {
     title: "Vyfoťte",
@@ -56,16 +54,14 @@ export default function Home() {
             Auto na chodníku, na přechodu nebo před vjezdem? Vyfoťte ho a aplikace za vás připraví
             podnět pro příslušný úřad, který odešlete svou datovou schránkou.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link prefetch={false}
+          <div className="mt-8">
+            <Link
+              prefetch={false}
               href="/nahlasit"
-              className="inline-flex items-center rounded-lg bg-sign-blue px-5 py-3 font-medium text-white transition hover:opacity-90"
+              className="inline-flex items-center rounded-xl bg-sign-blue px-5 py-3.5 text-base font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
             >
               Nahlásit auto
             </Link>
-            <a href={GITHUB_URL} className="text-sm font-medium text-muted underline-offset-4 hover:underline">
-              Zdrojový kód na GitHubu
-            </a>
           </div>
         </section>
 
@@ -74,31 +70,31 @@ export default function Home() {
         </section>
 
         <section aria-labelledby="jak-to-funguje" className="border-t border-border py-16">
-          <h2 id="jak-to-funguje" className="text-2xl font-semibold tracking-tight">
+          <h2 id="jak-to-funguje" className="text-2xl font-semibold tracking-tight text-balance">
             Jak to funguje
           </h2>
           <ol className="mt-8 grid gap-5 sm:grid-cols-3">
             {steps.map((step, i) => (
               <li key={step.title} className="rounded-xl border border-border bg-surface p-6">
-                <span className="flex size-9 items-center justify-center rounded-full bg-line-yellow font-bold text-black">
+                <span className="flex size-9 items-center justify-center rounded-full bg-line-yellow font-bold tabular-nums text-black">
                   {i + 1}
                 </span>
-                <h3 className="mt-4 font-semibold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{step.text}</p>
+                <h3 className="mt-4 font-semibold text-balance">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted text-pretty">{step.text}</p>
               </li>
             ))}
           </ol>
         </section>
 
         <section aria-labelledby="soukromi" className="border-t border-border py-16">
-          <h2 id="soukromi" className="text-2xl font-semibold tracking-tight">
+          <h2 id="soukromi" className="text-2xl font-semibold tracking-tight text-balance">
             Soukromí na prvním místě
           </h2>
           <dl className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
             {principles.map((p) => (
               <div key={p.title}>
-                <dt className="font-semibold">{p.title}</dt>
-                <dd className="mt-1.5 text-sm leading-relaxed text-muted">{p.text}</dd>
+                <dt className="font-semibold text-balance">{p.title}</dt>
+                <dd className="mt-1.5 text-sm leading-relaxed text-muted text-pretty">{p.text}</dd>
               </div>
             ))}
           </dl>
