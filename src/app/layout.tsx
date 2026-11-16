@@ -24,6 +24,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // The on-screen keyboard shrinks the layout instead of covering the focused form field
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
     { media: "(prefers-color-scheme: dark)", color: "#0f1115" },

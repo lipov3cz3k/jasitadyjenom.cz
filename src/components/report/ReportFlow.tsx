@@ -3,7 +3,17 @@
 // Three screens: photos (+ optional description) → review of the pre-filled data → the notice.
 // Rendered in the browser only (see ReportFlowClient): reads saved reporter details from localStorage.
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  addTransitionType,
+  type ReactNode,
+  startTransition,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+  ViewTransition,
+} from "react";
 import {
   applyAnalysis,
   emptyVehicleForm,
@@ -64,6 +74,10 @@ const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", emai
 
 type Screen = "photos" | "review" | "notice";
 
+/** View transition types for moving between the steps; the slides are in globals.css. */
+type StepDirection = "step-forward" | "step-back";
+const stepSlide = { "step-forward": "step-forward", "step-back": "step-back", default: "none" };
+
 export default function ReportFlow() {
   return (
     <>
@@ -123,9 +137,18 @@ function ReportScreens() {
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, []);
 
-  useEffect(() => {
+  // Layout effect: the view transition snapshots the new screen already scrolled to the top
+  useLayoutEffect(() => {
     window.scrollTo({ top: 0 });
   }, [screen]);
+
+  /** Switches the step inside a transition, so the screens slide (where the browser supports it). */
+  function go(next: Screen, direction: StepDirection) {
+    startTransition(() => {
+      addTransitionType(direction);
+      setScreen(next);
+    });
+  }
 
   // Photos shared to the installed app wait in the browser cache (see lib/pwa/share-target.ts)
   const addSharedPhotos = useEffectEvent((files: File[]) => {
@@ -318,7 +341,7 @@ function ReportScreens() {
   function continueToReview() {
     if (!useAi) setAnalysis({ kind: "off" });
     else if (analysis.kind !== "done" || analyzedKey.current !== analysisKey()) void analyze();
-    setScreen("review");
+    go("review", "step-forward");
   }
 
   function continueToNotice() {
@@ -330,11 +353,18 @@ function ReportScreens() {
     const facts = draftFacts();
     // Write a fresh text when the AI is on and the current one was written from different inputs
     if (useAi && facts && draft?.key !== draftKey(facts, photos)) void writeDraft();
-    setScreen("notice");
+    go("notice", "step-forward");
   }
 
+  // Keyed by step: React treats a step change as this screen leaving and the next one entering
+  const step = (content: ReactNode) => (
+    <ViewTransition key={screen} enter={stepSlide} exit={stepSlide} default="none">
+      {content}
+    </ViewTransition>
+  );
+
   if (screen === "photos") {
-    return (
+    return step(
       <PhotosScreen
         photos={photos}
         onAdd={addPhotos}
@@ -349,7 +379,7 @@ function ReportScreens() {
   }
 
   if (screen === "review") {
-    return (
+    return step(
       <ReviewScreen
         photos={photos}
         analysis={analysis}
@@ -370,13 +400,13 @@ function ReportScreens() {
         onDriverPresentChange={setDriverPresent}
         reporterState={reporterState}
         onReporterStateChange={setReporterState}
-        onBack={() => setScreen("photos")}
+        onBack={() => go("photos", "step-back")}
         onContinue={continueToNotice}
       />
     );
   }
 
-  return (
+  return step(
     <NoticeScreen
       photos={photos}
       place={place}
@@ -389,7 +419,7 @@ function ReportScreens() {
       draftRequest={draftRequest}
       currentDraftKey={draftFacts() ? draftKey(draftFacts()!, photos) : null}
       onWriteDraft={writeDraft}
-      onBack={() => setScreen("review")}
+      onBack={() => go("review", "step-back")}
     />
   );
 }
