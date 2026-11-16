@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 import { themeInitScript } from "@/lib/theme";
 
@@ -18,9 +19,13 @@ export const metadata: Metadata = {
     locale: "cs_CZ",
     type: "website",
   },
+  // Name under the icon after "Add to Home Screen" on iOS
+  appleWebApp: { capable: true, title: "jasitadyjenom", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
+  // The on-screen keyboard shrinks the layout instead of covering the focused form field
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
     { media: "(prefers-color-scheme: dark)", color: "#0f1115" },
@@ -34,7 +39,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-dvh font-sans antialiased">{children}</body>
+      <body className="min-h-dvh font-sans antialiased">
+        <SerwistProvider
+          swUrl="/serwist/sw.js"
+          // A service worker in dev would serve stale code; it is tested with `next build && next start`
+          disable={process.env.NODE_ENV !== "production"}
+          // A reload would throw away a report in progress (photos live only in memory)
+          reloadOnOnline={false}
+          // Pages are cached by the service worker itself; no extra request on every navigation
+          cacheOnNavigation={false}
+          // The bundle has no imports; a classic worker also runs where module workers do not
+          options={{ type: "classic" }}
+        >
+          {children}
+        </SerwistProvider>
+      </body>
     </html>
   );
 }

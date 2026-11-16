@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   checkAttachments,
   formatBytes,
@@ -36,8 +36,22 @@ const tips = [
   `u zákazu stání (ne zastavení) první a poslední fotku s odstupem aspoň ${MIN_PARKING_SPAN_MINUTES} minut, aby bylo vidět, že auto stálo`,
 ];
 
+// Phones and tablets; `capture` does nothing useful with a mouse (it opens the plain file picker)
+const TOUCH_QUERY = "(pointer: coarse)";
+
+function subscribeTouch(onChange: () => void) {
+  const query = window.matchMedia(TOUCH_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function useTouchScreen(): boolean {
+  return useSyncExternalStore(subscribeTouch, () => window.matchMedia(TOUCH_QUERY).matches, () => false);
+}
+
 export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
   const [dragging, setDragging] = useState(false);
+  const touch = useTouchScreen();
   const { totalBytes, tooLarge, tooMany } = checkAttachments(photos.map((p) => p.file.size));
   const withoutTime = photos.filter((p) => p.takenAt === null);
   const edited = photos.filter((p): p is PhotoItem & { edit: EditHint } => !!p.edit);
@@ -72,7 +86,7 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
           📷
         </span>
         <span className="text-lg font-semibold text-sign-blue">
-          {photos.length ? "Přidat další fotky" : "Vyfotit nebo vybrat fotky"}
+          {photos.length ? "Přidat další fotky" : touch ? "Vybrat fotky z galerie" : "Vyfotit nebo vybrat fotky"}
         </span>
         <span className="text-xs text-muted">Nejlépe 2–5 fotek přímo z galerie telefonu</span>
         <input
@@ -87,6 +101,24 @@ export function PhotoPicker({ photos, onAdd, onRemove }: Props) {
           }}
         />
       </label>
+
+      {touch && (
+        // Opens the camera straight away; a fresh photo carries a reliable capture time
+        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 font-semibold text-sign-blue transition hover:border-sign-blue has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sign-blue">
+          <span aria-hidden>📸</span> Vyfotit teď
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              e.target.value = "";
+              if (files.length) onAdd(files);
+            }}
+          />
+        </label>
+      )}
 
       {photos.length > 0 && (
         <>

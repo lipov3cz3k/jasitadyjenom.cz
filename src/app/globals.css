@@ -113,3 +113,57 @@ body {
     transform: translateY(-100%);
   }
 }
+
+/* Report steps (ReportFlow): a short slide in the direction of travel. Clicks pass through to the
+   live page during the animation. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(.step-forward) {
+  --step-offset: -40px;
+  animation:
+    150ms ease-in both step-fade reverse,
+    300ms ease-in-out both step-slide reverse;
+}
+::view-transition-new(.step-forward) {
+  --step-offset: 40px;
+  animation:
+    210ms ease-out 100ms both step-fade,
+    300ms ease-in-out both step-slide;
+}
+::view-transition-old(.step-back) {
+  --step-offset: 40px;
+  animation:
+    150ms ease-in both step-fade reverse,
+    300ms ease-in-out both step-slide reverse;
+}
+::view-transition-new(.step-back) {
+  --step-offset: -40px;
+  animation:
+    210ms ease-out 100ms both step-fade,
+    300ms ease-in-out both step-slide;
+}
+
+@keyframes step-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes step-slide {
+  from {
+    translate: var(--step-offset);
+  }
+  to {
+    translate: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
