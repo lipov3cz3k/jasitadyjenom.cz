@@ -102,3 +102,8 @@ Instalace na plochu, start bez připojení a sdílení fotek z galerie. Service 
 - [x] Zásady soukromí
 - [ ] Ověřit na reálném Androidu (instalace, sdílení více fotek, EXIF u sdílených fotek) a iOS (přidání na plochu)
 - [x] `experimental.useOffline` a hláška „Jste bez připojení“ ve formuláři
+- [x] Sdílení příloh (Web Share API): fotky a text podnětu jako .txt jedním tlačítkem do Datovky, e-mailu nebo souborů
+- [x] Nabídka instalace po dokončeném podnětu (`beforeinstallprompt`, na iOS návod „Sdílet → Přidat na plochu“)
+- [x] Tlačítko „Vyfotit teď“ na telefonu (`capture="environment"`)
+- [ ] Ověřit na reálném zařízení, jestli Datovka sdílené soubory převezme a jestli fotky z `capture` mají EXIF čas (a polohu)
+- [ ] Rozpracovaný podnět i s fotkami uložit v prohlížeči (IndexedDB, `navigator.storage.persist()`)
