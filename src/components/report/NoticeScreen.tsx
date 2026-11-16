@@ -3,11 +3,14 @@
 import { useState } from "react";
 import type { VehicleForm } from "@/lib/analysis/apply";
 import { buildNotice, type Attachment, type Notice as NoticeText } from "@/lib/notice/template";
+import { noticeFile } from "@/lib/pwa/share";
 import { CopyButton } from "./CopyButton";
 import { DraftEditor, harmFromLines, type DraftState } from "./DraftEditor";
+import { InstallCard } from "./InstallCard";
 import { Notice } from "./Notice";
 import type { PhotoItem } from "./PhotoPicker";
 import type { DraftRequest, PlaceState, ReporterState } from "./ReportFlow";
+import { ShareAttachments } from "./ShareAttachments";
 import { ScreenHeader, Spinner } from "./ui";
 
 const PORTAL_URL = "https://www.mojedatovaschranka.cz/";
@@ -65,12 +68,13 @@ export function NoticeScreen(props: Props) {
     createdAt: new Date(),
   });
 
+  const file = noticeFile(notice.body, form.plate);
+
   function download() {
-    const blob = new Blob(["﻿" + notice.body], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(file);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `podnet-RZ-${form.plate.replace(/[^0-9A-Za-z]/g, "").toUpperCase()}.txt`;
+    a.download = file.name;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -108,7 +112,14 @@ export function NoticeScreen(props: Props) {
           </Notice>
         )}
 
-        <SendSteps notice={notice} dataBoxId={authority.dataBoxId} attachments={attachments} onDownload={download} />
+        <SendSteps
+          notice={notice}
+          noticeFile={file}
+          photos={photos.map((p) => p.file)}
+          dataBoxId={authority.dataBoxId}
+          attachments={attachments}
+          onDownload={download}
+        />
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -157,6 +168,8 @@ export function NoticeScreen(props: Props) {
             </pre>
           )}
         </div>
+
+        <InstallCard />
       </div>
     </div>
   );
@@ -164,11 +177,15 @@ export function NoticeScreen(props: Props) {
 
 function SendSteps({
   notice,
+  noticeFile,
+  photos,
   dataBoxId,
   attachments,
   onDownload,
 }: {
   notice: NoticeText;
+  noticeFile: File;
+  photos: File[];
   dataBoxId: string;
   attachments: Attachment[];
   onDownload: () => void;
@@ -210,6 +227,7 @@ function SendSteps({
       <SendStep n={5}>
         Přiložte fotky v původní podobě z telefonu:{" "}
         <span className="text-muted">{attachments.map((a) => a.name).join(", ")}</span>
+        <ShareAttachments photos={photos} notice={noticeFile} subject={notice.subject} />
       </SendStep>
       <SendStep n={6}>Odešlete. Zprávy úřadům jsou zdarma.</SendStep>
     </ol>

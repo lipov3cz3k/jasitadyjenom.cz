@@ -88,7 +88,8 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
         Web si můžete přidat na plochu jako aplikaci. Aby fungoval i se slabým signálem, uloží si prohlížeč jeho
         stránky, skripty a data úřadů (Cache Storage). Poloha, odpovědi AI ani údaje oznamovatele se tam
         neukládají. Když fotku do aplikace nasdílíte z galerie, převezme ji přímo váš prohlížeč a k nám se
-        neodesílá. V úložišti počká jen do otevření formuláře a pak ji smažeme. Uložená data smažete vymazáním
+        neodesílá. V úložišti počká jen do otevření formuláře a pak ji smažeme. Tlačítko „Sdílet fotky“ u hotového
+        podnětu předá přílohy přímo aplikaci, kterou si v telefonu vyberete, a přes nás nejdou. Uložená data smažete vymazáním
         dat webu v prohlížeči nebo odinstalováním aplikace.
       </>
     ),
