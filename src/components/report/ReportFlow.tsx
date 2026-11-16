@@ -23,6 +23,7 @@ import { SHARED_PARAM, takeSharedPhotos } from "@/lib/pwa/share-target";
 import { appendPhotos, postAi } from "./ai-request";
 import { draftKey, type DraftState } from "./DraftEditor";
 import { NoticeScreen } from "./NoticeScreen";
+import { OfflineNotice } from "./OfflineNotice";
 import { PhotosScreen } from "./PhotosScreen";
 import type { PhotoItem } from "./PhotoPicker";
 import { ReviewScreen } from "./ReviewScreen";
@@ -64,6 +65,15 @@ const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", emai
 type Screen = "photos" | "review" | "notice";
 
 export default function ReportFlow() {
+  return (
+    <>
+      <OfflineNotice />
+      <ReportScreens />
+    </>
+  );
+}
+
+function ReportScreens() {
   const [screen, setScreen] = useState<Screen>("photos");
 
   const [photos, setPhotos] = useState<PhotoItem[]>([]);

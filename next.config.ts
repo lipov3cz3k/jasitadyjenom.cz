@@ -11,6 +11,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Offline detection for the "Jste bez připojení" notice in the report form (next/offline)
+  experimental: { useOffline: true },
 
   async redirects() {
     return [

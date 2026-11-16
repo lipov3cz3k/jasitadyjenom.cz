@@ -25,7 +25,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     // "Share → jasitadyjenom" from the gallery. The service worker catches the POST in the browser,
-    // so the photos never reach our server (see public/sw.js).
+    // so the photos never reach our server (see src/sw/sw.ts).
     share_target: {
       action: SHARE_TARGET_PATH,
       method: "POST",

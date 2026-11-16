@@ -101,4 +101,4 @@ Instalace na plochu, start bez připojení a sdílení fotek z galerie. Service 
 - [x] Share target: fotky nasdílené z galerie převezme service worker v prohlížeči a předá formuláři (`/sdilet`)
 - [x] Zásady soukromí
 - [ ] Ověřit na reálném Androidu (instalace, sdílení více fotek, EXIF u sdílených fotek) a iOS (přidání na plochu)
-- [ ] Zvážit `experimental.useOffline` a hlášku „jste offline“ ve formuláři
+- [x] `experimental.useOffline` a hláška „Jste bez připojení“ ve formuláři
