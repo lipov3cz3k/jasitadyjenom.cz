@@ -9,6 +9,8 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
     try {
       await navigator.clipboard.writeText(text);
       setState("copied");
+      // A short tap of feedback on phones; iOS Safari has no Vibration API
+      navigator.vibrate?.(30);
     } catch {
       setState("failed");
     }
