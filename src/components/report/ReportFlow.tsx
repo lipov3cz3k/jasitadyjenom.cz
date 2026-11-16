@@ -3,7 +3,7 @@
 // Three screens: photos (+ optional description) → review of the pre-filled data → the notice.
 // Rendered in the browser only (see ReportFlowClient): reads saved reporter details from localStorage.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   applyAnalysis,
   emptyVehicleForm,
@@ -18,6 +18,8 @@ import type { DraftFacts, NoticeDraft } from "@/lib/draft/schema";
 import { clearReporter, loadReporter, saveReporter } from "@/lib/notice/reporter-storage";
 import type { Reporter } from "@/lib/notice/template";
 import { combineMetadata, readPhotoMetadata, type LatLon, type PhotoMetadata } from "@/lib/photos/metadata";
+import { isImageFile } from "@/lib/photos/rules";
+import { SHARED_PARAM, takeSharedPhotos } from "@/lib/pwa/share-target";
 import { appendPhotos, postAi } from "./ai-request";
 import { draftKey, type DraftState } from "./DraftEditor";
 import { NoticeScreen } from "./NoticeScreen";
@@ -114,6 +116,27 @@ export default function ReportFlow() {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [screen]);
+
+  // Photos shared to the installed app wait in the browser cache (see lib/pwa/share-target.ts)
+  const addSharedPhotos = useEffectEvent((files: File[]) => {
+    const images = files.filter(isImageFile);
+    if (images.length) void addPhotos(images);
+  });
+  const sharedTaken = useRef(false);
+  useEffect(() => {
+    if (sharedTaken.current) return;
+    sharedTaken.current = true;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(SHARED_PARAM)) return;
+    url.searchParams.delete(SHARED_PARAM);
+    // A reload must not ask for the (already taken) photos again
+    window.history.replaceState(window.history.state, "", url);
+    takeSharedPhotos()
+      .then(addSharedPhotos)
+      .catch(() => {
+        // Cache Storage unavailable – the user picks the photos by hand
+      });
+  }, []);
 
   function updateLocation(point: LatLon, source: LocationSource) {
     lookup.current?.abort();
