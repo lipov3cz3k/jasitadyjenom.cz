@@ -1,7 +1,8 @@
 "use client";
 
 // Three screens: photos (+ optional description) → review of the pre-filled data → the notice.
-// Rendered in the browser only (see ReportFlowClient): reads saved reporter details from localStorage.
+// Rendered in the browser only (see ReportFlowClient): reads saved reporter details from localStorage
+// and the report in progress from IndexedDB (report-store.ts), so a closed app picks up where it was.
 
 import {
   addTransitionType,
@@ -36,7 +37,18 @@ import { NoticeScreen } from "./NoticeScreen";
 import { OfflineNotice } from "./OfflineNotice";
 import { PhotosScreen } from "./PhotosScreen";
 import type { PhotoItem } from "./PhotoPicker";
+import { createReportSaver, type ReportSaver } from "./report-saver";
+import {
+  clearReport,
+  deletePhoto,
+  loadReport,
+  requestPersistentStorage,
+  savePhoto,
+  saveSnapshot,
+} from "./report-store";
+import { ResumeNotice } from "./ResumeNotice";
 import { ReviewScreen } from "./ReviewScreen";
+import type { ReportScreen, RestoredReport } from "./saved-report";
 
 export type LocationSource = "exif" | "device" | "map";
 export type TimeSource = "exif" | "file" | "manual";
@@ -72,57 +84,114 @@ export interface ReporterState {
 
 const emptyReporter: Reporter = { fullName: "", address: "", dataBoxId: "", email: "" };
 
-type Screen = "photos" | "review" | "notice";
+type Screen = ReportScreen;
 
 /** View transition types for moving between the steps; the slides are in globals.css. */
 type StepDirection = "step-forward" | "step-back";
 const stepSlide = { "step-forward": "step-forward", "step-back": "step-back", default: "none" };
 
+const newSaver = () =>
+  createReportSaver({ saveSnapshot: (snapshot) => saveSnapshot(snapshot), savePhoto, deletePhoto });
+
+interface Loaded {
+  restored: RestoredReport | null;
+  photos: PhotoItem[];
+}
+
 export default function ReportFlow() {
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  /** A new session (after "Začít znovu") remounts the screens with empty state. */
+  const [session, setSession] = useState(0);
+  const [saver, setSaver] = useState<ReportSaver>(newSaver);
+  const restoredUrls = useRef<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const urls = restoredUrls.current;
+    loadReport()
+      .catch(() => null) // IndexedDB unavailable: start empty, as before
+      .then((restored) => {
+        if (cancelled) return;
+        const photos = (restored?.photos ?? []).map((p) => {
+          const url = URL.createObjectURL(p.file);
+          urls.push(url);
+          return { id: p.id, file: p.file, url, takenAt: p.takenAt, edit: p.edit };
+        });
+        setLoaded({ restored, photos });
+      });
+    return () => {
+      cancelled = true;
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, []);
+
+  async function startOver() {
+    // Stop first: a late save of the old report must not land after the store is cleared
+    await saver.stop();
+    await clearReport().catch(() => {});
+    setSaver(newSaver());
+    setLoaded({ restored: null, photos: [] });
+    setSession((s) => s + 1);
+  }
+
+  if (!loaded) return <div className="h-96 animate-pulse rounded-xl border border-border bg-surface" />;
+
   return (
     <>
       <OfflineNotice />
-      <ReportScreens />
+      {loaded.restored && <ResumeNotice savedAt={loaded.restored.savedAt} onStartOver={startOver} />}
+      <ReportScreens key={session} initial={loaded.restored} initialPhotos={loaded.photos} saver={saver} />
     </>
   );
 }
 
-function ReportScreens() {
-  const [screen, setScreen] = useState<Screen>("photos");
+function ReportScreens({
+  initial,
+  initialPhotos,
+  saver,
+}: {
+  initial: RestoredReport | null;
+  initialPhotos: PhotoItem[];
+  saver: ReportSaver;
+}) {
+  const saved = initial?.snapshot;
+  const [screen, setScreen] = useState<Screen>(saved?.screen ?? "photos");
 
-  const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const metadata = useRef(new Map<string, PhotoMetadata>());
+  const [photos, setPhotos] = useState<PhotoItem[]>(initialPhotos);
+  const metadata = useRef(new Map<string, PhotoMetadata>(initial?.photos.map((p) => [p.id, p.metadata])));
   const photoUrls = useRef<string[]>([]);
 
-  const [description, setDescription] = useState("");
-  const [useAi, setUseAi] = useState(true);
-  const [analysis, setAnalysis] = useState<AnalysisState>({ kind: "off" });
+  const [description, setDescription] = useState(saved?.description ?? "");
+  const [useAi, setUseAi] = useState(saved?.useAi ?? true);
+  const [analysis, setAnalysis] = useState<AnalysisState>(saved?.analysis ?? { kind: "off" });
   /** Inputs of the last successful analysis; going back and forth doesn't repeat the same request. */
-  const analyzedKey = useRef<string | null>(null);
+  const analyzedKey = useRef<string | null>(saved?.analyzedKey ?? null);
 
-  const [place, setPlace] = useState<PlaceState>({
-    location: null,
-    address: "",
-    addressState: "idle",
-    authority: null,
-    authorityState: "idle",
-  });
+  const [place, setPlace] = useState<PlaceState>(
+    saved?.place ?? {
+      location: null,
+      address: "",
+      addressState: "idle",
+      authority: null,
+      authorityState: "idle",
+    },
+  );
   const lookup = useRef<AbortController | null>(null);
 
-  const [takenAt, setTakenAt] = useState<Date | null>(null);
-  const [timeSource, setTimeSource] = useState<TimeSource | null>(null);
+  const [takenAt, setTakenAt] = useState<Date | null>(saved?.takenAt ?? null);
+  const [timeSource, setTimeSource] = useState<TimeSource | null>(saved?.timeSource ?? null);
 
-  const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
-  const [suggested, setSuggested] = useState<ReadonlySet<VehicleField>>(new Set());
-  const [driverPresent, setDriverPresent] = useState(false);
+  const [vehicleForm, setVehicleForm] = useState<VehicleForm>(saved?.vehicleForm ?? emptyVehicleForm);
+  const [suggested, setSuggested] = useState<ReadonlySet<VehicleField>>(saved?.suggested ?? new Set());
+  const [driverPresent, setDriverPresent] = useState(saved?.driverPresent ?? false);
 
   const [reporterState, setReporterState] = useState<ReporterState>(() => {
     const stored = loadReporter();
     return { reporter: stored ?? emptyReporter, anonymous: false, remember: stored !== null, stored: stored !== null };
   });
 
-  const [draft, setDraft] = useState<DraftState | null>(null);
-  const [draftRequest, setDraftRequest] = useState<DraftRequest>({ kind: "idle" });
+  const [draft, setDraft] = useState<DraftState | null>(saved?.draft ?? null);
+  const [draftRequest, setDraftRequest] = useState<DraftRequest>(saved?.draftRequest ?? { kind: "idle" });
   const aiRequest = useRef<AbortController | null>(null);
   const draftAbort = useRef<AbortController | null>(null);
 
@@ -136,6 +205,52 @@ function ReportScreens() {
     const urls = photoUrls.current;
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, []);
+
+  // Keep the report in this browser after every change (debounced in the saver)
+  useEffect(() => {
+    saver.schedule({
+      screen,
+      photoIds: photos.map((p) => p.id),
+      description,
+      useAi,
+      analysis,
+      analyzedKey: analyzedKey.current,
+      place,
+      takenAt,
+      timeSource,
+      vehicleForm,
+      suggested,
+      driverPresent,
+      draft,
+      draftRequest,
+    });
+    if (photos.length) requestPersistentStorage();
+  });
+
+  // Write right away when the app goes to the background – it may never come back
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") saver.flush();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", saver.flush);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", saver.flush);
+      saver.flush();
+    };
+  }, [saver]);
+
+  // The app closed while the address or authority was being looked up: look again
+  const lookUpAgain = useEffectEvent(() => {
+    if (place.location) updateLocation(place.location.point, place.location.source);
+  });
+  const lookedUpAgain = useRef(false);
+  useEffect(() => {
+    if (lookedUpAgain.current || !initial?.relookup) return;
+    lookedUpAgain.current = true;
+    lookUpAgain();
+  }, [initial]);
 
   // Layout effect: the view transition snapshots the new screen already scrolled to the top
   useLayoutEffect(() => {
@@ -223,6 +338,18 @@ function ReportScreens() {
       ]),
     );
     setPhotos((prev) => prev.map((p) => (results.has(p.id) ? { ...p, ...results.get(p.id) } : p)));
+    items.forEach(({ id, file }, n) => {
+      const { gps, takenAt: readTakenAt, takenAtSource } = read[n];
+      saver.savePhoto({
+        id,
+        blob: file,
+        name: file.name,
+        type: file.type,
+        lastModified: file.lastModified,
+        ...results.get(id)!,
+        metadata: { gps, takenAt: readTakenAt, takenAtSource },
+      });
+    });
 
     const combined = combineMetadata([...metadata.current.values()]);
     // A photo never overrides the user's manual choice
@@ -236,6 +363,7 @@ function ReportScreens() {
   function removePhoto(id: string) {
     metadata.current.delete(id);
     setPhotos((prev) => prev.filter((p) => p.id !== id));
+    saver.deletePhoto(id);
   }
 
   function changeVehicleField<K extends VehicleField>(field: K, value: VehicleForm[K]) {
