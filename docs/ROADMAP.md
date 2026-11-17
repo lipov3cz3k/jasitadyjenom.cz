@@ -89,3 +89,21 @@ Poučení z prvního odloženého podnětu: úřad napsal, že z fotek „nevypl
 - Mapy.com jako zdroj map a geokódování
 - Zmenšování fotek a převod HEIC na JPEG
 - E2E testy (Playwright)
+
+## Etapa 5 – aplikace (PWA)
+
+Instalace na plochu, start bez připojení a sdílení fotek z galerie. Service worker staví
+[Serwist](https://serwist.pages.dev) (`@serwist/turbopack`) při buildu ze `src/sw/sw.ts`.
+
+- [x] Manifest (`app/manifest.ts`), ikony generované z `icon.svg` (192/512, maskable, apple-touch-icon)
+- [x] Precache buildu (`.next/static`, `public/`) a stránek `/nahlasit`, `/`, `/offline`; ostatní stránky network first
+- [x] Nic necachujeme z `/api/*` ani z cizích domén (dlaždice mapy, ČÚZK s polohou)
+- [x] Share target: fotky nasdílené z galerie převezme service worker v prohlížeči a předá formuláři (`/sdilet`)
+- [x] Zásady soukromí
+- [ ] Ověřit na reálném Androidu (instalace, sdílení více fotek, EXIF u sdílených fotek) a iOS (přidání na plochu)
+- [x] `experimental.useOffline` a hláška „Jste bez připojení“ ve formuláři
+- [x] Sdílení příloh (Web Share API): fotky a text podnětu jako .txt jedním tlačítkem do Datovky, e-mailu nebo souborů
+- [x] Nabídka instalace po dokončeném podnětu (`beforeinstallprompt`, na iOS návod „Sdílet → Přidat na plochu“)
+- [x] Tlačítko „Vyfotit teď“ na telefonu (`capture="environment"`)
+- [ ] Ověřit na reálném zařízení, jestli Datovka sdílené soubory převezme a jestli fotky z `capture` mají EXIF čas (a polohu)
+- [x] Rozpracovaný podnět i s fotkami uložit v prohlížeči (IndexedDB, `navigator.storage.persist()`)

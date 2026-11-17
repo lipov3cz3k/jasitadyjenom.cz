@@ -81,6 +81,34 @@ const sections: { id?: string; title: string; body: React.ReactNode }[] = [
     ),
   },
   {
+    id: "aplikace",
+    title: "Instalace a práce bez připojení",
+    body: (
+      <>
+        Web si můžete přidat na plochu jako aplikaci. Aby fungoval i se slabým signálem, uloží si prohlížeč jeho
+        stránky, skripty a data úřadů (Cache Storage). Poloha, odpovědi AI ani údaje oznamovatele se tam
+        neukládají (o rozpracovaném podnětu viz níže). Když fotku do aplikace nasdílíte z galerie, převezme ji
+        přímo váš prohlížeč a k nám se neodesílá. V úložišti počká jen do otevření formuláře a pak ji smažeme. Tlačítko „Sdílet fotky“ u hotového
+        podnětu předá přílohy přímo aplikaci, kterou si v telefonu vyberete, a přes nás nejdou. Uložená data smažete vymazáním
+        dat webu v prohlížeči nebo odinstalováním aplikace.
+      </>
+    ),
+  },
+  {
+    id: "rozpracovany",
+    title: "Rozpracovaný podnět",
+    body: (
+      <>
+        Aby se podnět neztratil, když aplikaci zavřete (třeba když fotíte bez signálu a dokončíte ho později),
+        ukládá si ho prohlížeč průběžně do svého úložiště (IndexedDB). Uloží se fotky, popis situace, místo, čas,
+        údaje o vozidle, výsledek rozpoznání a text podnětu. Vaše jméno a adresu ne, ty se ukládají jen podle volby
+        výše. Nic z toho se neodesílá. Prohlížeč požádáme, aby data nemazal při nedostatku místa, takže se vás může
+        zeptat, jestli smí data trvale uložit. Rozpracovaný podnět smažete tlačítkem „Začít znovu“ nad formulářem
+        nebo vymazáním dat webu v prohlížeči. Sám se smaže po 14 dnech.
+      </>
+    ),
+  },
+  {
     title: "Cookies a analytika",
     body: (
       <>
