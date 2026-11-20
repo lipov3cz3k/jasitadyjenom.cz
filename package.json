@@ -17,10 +17,10 @@
     "prebuild": "node scripts/copy-vendor.mjs"
   },
   "dependencies": {
-    "@google/genai": "3.0.0",
+    "@google/genai": "3.3.0",
     "exifreader": "4.54.0",
-    "maplibre-gl": "6.16.0",
-    "next": "16.4.5",
+    "maplibre-gl": "6.18.0",
+    "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "topojson-client": "3.1.0"
@@ -34,7 +34,7 @@
     "@types/topojson-client": "3.1.5",
     "@types/topojson-specification": "1.0.5",
     "eslint": "10.14.0",
-    "eslint-config-next": "16.4.5",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.5",
     "typescript": "6.0.3",
     "vitest": "4.1.12"
