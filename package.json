@@ -39,7 +39,7 @@
     "eslint-config-next": "16.4.5",
     "serwist": "9.5.13",
     "tailwindcss": "4.3.5",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vitest": "4.1.12"
   },
   "allowScripts": {
