@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSerwist } from "@serwist/turbopack";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,6 +11,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Offline detection for the "Jste bez připojení" notice in the report form (next/offline)
+  experimental: { useOffline: true },
 
   async redirects() {
     return [
@@ -24,8 +27,13 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Browsers check for a new service worker on every visit; never let a cache answer for it
+      { source: "/serwist/:path*", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+    ];
   },
 };
 
-export default nextConfig;
+// Serwist bundles the service worker with esbuild at build time (see app/serwist/[path]/route.ts)
+export default withSerwist(nextConfig);
