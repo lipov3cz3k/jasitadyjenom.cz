@@ -12,8 +12,8 @@ export function OfflineNotice() {
       role="status"
       className="mb-4 rounded-xl border border-line-yellow/60 bg-line-yellow/15 px-4 py-3 text-sm leading-relaxed"
     >
-      <span className="font-semibold">Jste bez připojení.</span> Podnět můžete připravit dál, vyplněné údaje vám
-      zůstanou. Mapa, adresa a předvyplnění pomocí AI naskočí, až budete zase online.
+      <span className="font-semibold">Jste bez připojení.</span> Podnět můžete připravit dál, fotky i vyplněné
+      údaje vám zůstanou, i když aplikaci zavřete. Mapa, adresa a předvyplnění pomocí AI naskočí, až budete zase online.
     </p>
   );
 }

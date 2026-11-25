@@ -106,4 +106,4 @@ Instalace na plochu, start bez připojení a sdílení fotek z galerie. Service 
 - [x] Nabídka instalace po dokončeném podnětu (`beforeinstallprompt`, na iOS návod „Sdílet → Přidat na plochu“)
 - [x] Tlačítko „Vyfotit teď“ na telefonu (`capture="environment"`)
 - [ ] Ověřit na reálném zařízení, jestli Datovka sdílené soubory převezme a jestli fotky z `capture` mají EXIF čas (a polohu)
-- [ ] Rozpracovaný podnět i s fotkami uložit v prohlížeči (IndexedDB, `navigator.storage.persist()`)
+- [x] Rozpracovaný podnět i s fotkami uložit v prohlížeči (IndexedDB, `navigator.storage.persist()`)
